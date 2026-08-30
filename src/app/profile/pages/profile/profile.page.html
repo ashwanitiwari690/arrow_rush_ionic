@@ -1,0 +1,110 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="profile-content">
+  <div class="avatar-block">
+    <div class="avatar">
+      <ion-icon name="person"></ion-icon>
+    </div>
+    <span class="username">Player</span>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="value gold">{{ balance() | number }}</span>
+      <span class="label">Coins</span>
+    </div>
+    <div class="stat-card">
+      <span class="value">{{ completedCount }} / {{ totalLevels }}</span>
+      <span class="label">Levels Completed</span>
+    </div>
+    <div class="stat-card">
+      <span class="value">{{ totalScore() | number }}</span>
+      <span class="label">Total Score</span>
+    </div>
+    <div class="stat-card">
+      <span class="value">{{ bestLevelId || '—' }}</span>
+      <span class="label">Best Level</span>
+    </div>
+  </div>
+
+  <h2 class="section-title">Achievements</h2>
+  <div class="achievement-list">
+    @for (a of achievements(); track a.id) {
+      <div class="achievement" [class.locked]="!a.isUnlocked">
+        <ion-icon [name]="a.icon"></ion-icon>
+        <div>
+          <span class="title">{{ a.title }}</span>
+          <span class="desc">{{ a.description }}</span>
+        </div>
+        @if (a.isUnlocked) {
+          <ion-icon name="checkmark-circle" class="check"></ion-icon>
+        }
+      </div>
+    }
+  </div>
+
+  <h2 class="section-title">Wallet</h2>
+  <div class="wallet-card">
+    <div class="wallet-balance">
+      <app-coin-icon></app-coin-icon>
+      {{ balance() | number }} Coins
+    </div>
+
+    @if (!redemptionEnabled) {
+      <p class="redeem-note">
+        Redemption isn't available yet — it will unlock once the centralized wallet backend is
+        connected. Your coins are saved and will carry over.
+      </p>
+    } @else if (redeemState === 'success') {
+      <div class="redeem-result success">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <p>Redeemed! ₹{{ redeemedRupees }} credited to your wallet.</p>
+        <ion-button expand="block" fill="outline" (click)="dismissRedeemResult()">Done</ion-button>
+      </div>
+    } @else if (canWithdraw || redeemState === 'error') {
+      <input
+        id="profile-withdraw-number"
+        class="mobile-input"
+        type="tel"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        autocomplete="tel"
+        placeholder="Enter 10 digit number"
+        [value]="withdrawNumber"
+        [disabled]="isRedeeming"
+        (input)="onWithdrawNumberInput($event)"
+      />
+      <ion-button
+        expand="block"
+        color="primary"
+        [disabled]="!withdrawNumberValid || isRedeeming || isBlockedByDuplicate"
+        (click)="onWithdraw()"
+      >
+        {{ isRedeeming ? 'Processing…' : 'WITHDRAW' }}
+      </ion-button>
+      @if (redeemMessage) {
+        <p class="redeem-message" [class.error]="redeemState === 'error'">{{ redeemMessage }}</p>
+        @if (redeemState === 'error') {
+          <ion-button expand="block" fill="clear" size="small" (click)="dismissRedeemResult()">
+            Dismiss
+          </ion-button>
+        }
+      }
+    } @else {
+      <p class="redeem-note">
+        Withdraw unlocks at {{ minimumRedeemCoins | number }} coins — {{ balance() | number }} /
+        {{ minimumRedeemCoins | number }} so far.
+      </p>
+      <div class="redeem-progress">
+        <div class="redeem-progress-fill" [style.width.%]="progressPercent"></div>
+      </div>
+    }
+  </div>
+</ion-content>

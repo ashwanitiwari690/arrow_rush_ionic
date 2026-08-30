@@ -1,0 +1,26 @@
+<div class="game-header">
+  <div class="top-row">
+    <div class="left-actions">
+      <button type="button" class="icon-btn" (click)="homeTap.emit()" aria-label="Home">
+        <ion-icon name="home"></ion-icon>
+      </button>
+      <app-coin-balance></app-coin-balance>
+    </div>
+    <div class="level-label">LEVEL {{ levelId }}</div>
+    <button type="button" class="icon-btn" (click)="pauseTap.emit()" aria-label="Pause">
+      <ion-icon name="pause"></ion-icon>
+    </button>
+  </div>
+
+  <div class="status-row">
+    <div class="timer" [class.low]="isLowTime">
+      <ion-icon name="time-outline"></ion-icon>
+      {{ formattedTime }}
+    </div>
+    <div class="hearts" aria-label="Lives remaining">
+      @for (filled of heartsArray; track $index) {
+        <ion-icon [name]="filled ? 'heart' : 'heart-outline'"></ion-icon>
+      }
+    </div>
+  </div>
+</div>

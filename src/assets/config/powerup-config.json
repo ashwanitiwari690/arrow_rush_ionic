@@ -1,0 +1,15 @@
+{
+  "startingCounts": {
+    "HINT": 3,
+    "UNDO": 2,
+    "SHUFFLE": 2,
+    "EXTRA": 2
+  },
+  "storeCosts": {
+    "HINT": 50,
+    "UNDO": 50,
+    "SHUFFLE": 75,
+    "EXTRA": 60
+  },
+  "storeBundleSize": 1
+}

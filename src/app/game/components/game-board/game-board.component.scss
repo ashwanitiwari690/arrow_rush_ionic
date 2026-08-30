@@ -1,0 +1,32 @@
+.game-board {
+  position: relative;
+  display: grid;
+  gap: clamp(5px, 2vw, 10px);
+  width: min(94vw, 72dvh, 560px);
+  margin: 0 auto;
+  padding: clamp(8px, 3vw, 16px);
+  border-radius: 24px;
+  background: radial-gradient(circle at 30% 0%, color-mix(in srgb, var(--ar-board-bg) 80%, white 6%), var(--ar-board-bg) 60%);
+  border: 3px solid var(--ar-cell-border);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    0 2px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 6px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.cell-bg {
+  border-radius: 10px;
+  background: var(--ar-cell-bg);
+  border: 1px solid var(--ar-cell-border);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.grid-item {
+  position: relative;
+}
+
+.ghost {
+  pointer-events: none;
+  z-index: 5;
+}

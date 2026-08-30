@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="theme-card"
+  [class.selected]="isSelected"
+  (click)="choose.emit(theme)"
+>
+  <div
+    class="swatch"
+    [style.background]="theme.colors.boardBg"
+    [style.borderColor]="theme.colors.cellBorder"
+  >
+    <div class="swatch-cell" [style.background]="theme.colors.cellBg" [style.borderColor]="theme.colors.cellBorder"></div>
+    <div class="swatch-accent" [style.background]="theme.colors.accent"></div>
+  </div>
+
+  <span class="theme-name">{{ theme.name }}</span>
+
+  @if (isSelected) {
+    <span class="theme-status">SELECTED</span>
+  }
+  @if (!isSelected && !isUnlocked) {
+    <span class="theme-status locked">
+      <app-coin-icon></app-coin-icon>{{ theme.cost | number }}
+    </span>
+  }
+  @if (!isSelected && isUnlocked) {
+    <span class="theme-status">Tap to use</span>
+  }
+</button>

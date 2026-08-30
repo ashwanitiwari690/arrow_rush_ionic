@@ -1,0 +1,702 @@
+[
+  {
+    "levelId": 1,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 2,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 3,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 4,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 5,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 6,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 7,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 5
+  },
+  {
+    "levelId": 8,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 9,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 10,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 11,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 12,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 13,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 14,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 15,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 6
+  },
+  {
+    "levelId": 16,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 17,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 18,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 19,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 20,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 21,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 22,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 23,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 7
+  },
+  {
+    "levelId": 24,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 8
+  },
+  {
+    "levelId": 25,
+    "difficulty": "EASY",
+    "rows": 5,
+    "columns": 5,
+    "blockCount": 8
+  },
+  {
+    "levelId": 26,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 8
+  },
+  {
+    "levelId": 27,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 8
+  },
+  {
+    "levelId": 28,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 8
+  },
+  {
+    "levelId": 29,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 8
+  },
+  {
+    "levelId": 30,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 8
+  },
+  {
+    "levelId": 31,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 32,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 33,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 34,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 35,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 36,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 9
+  },
+  {
+    "levelId": 37,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 38,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 39,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 40,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 41,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 42,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 10
+  },
+  {
+    "levelId": 43,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 44,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 45,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 46,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 47,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 48,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 11
+  },
+  {
+    "levelId": 49,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 50,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 51,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 52,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 53,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 54,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 12
+  },
+  {
+    "levelId": 55,
+    "difficulty": "MEDIUM",
+    "rows": 6,
+    "columns": 6,
+    "blockCount": 13
+  },
+  {
+    "levelId": 56,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 11
+  },
+  {
+    "levelId": 57,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 11
+  },
+  {
+    "levelId": 58,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 11
+  },
+  {
+    "levelId": 59,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 11
+  },
+  {
+    "levelId": 60,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 11
+  },
+  {
+    "levelId": 61,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 62,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 63,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 64,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 65,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 66,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 12
+  },
+  {
+    "levelId": 67,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 68,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 69,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 70,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 71,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 72,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 13
+  },
+  {
+    "levelId": 73,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 74,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 75,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 76,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 77,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 78,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 14
+  },
+  {
+    "levelId": 79,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 80,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 81,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 82,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 83,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 84,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 15
+  },
+  {
+    "levelId": 85,
+    "difficulty": "HARD",
+    "rows": 7,
+    "columns": 7,
+    "blockCount": 16
+  },
+  {
+    "levelId": 86,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 15
+  },
+  {
+    "levelId": 87,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 15
+  },
+  {
+    "levelId": 88,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 15
+  },
+  {
+    "levelId": 89,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 16
+  },
+  {
+    "levelId": 90,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 16
+  },
+  {
+    "levelId": 91,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 16
+  },
+  {
+    "levelId": 92,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 16
+  },
+  {
+    "levelId": 93,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 17
+  },
+  {
+    "levelId": 94,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 17
+  },
+  {
+    "levelId": 95,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 17
+  },
+  {
+    "levelId": 96,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 17
+  },
+  {
+    "levelId": 97,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 18
+  },
+  {
+    "levelId": 98,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 18
+  },
+  {
+    "levelId": 99,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 18
+  },
+  {
+    "levelId": 100,
+    "difficulty": "EXPERT",
+    "rows": 8,
+    "columns": 8,
+    "blockCount": 18
+  }
+]

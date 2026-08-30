@@ -1,0 +1,12 @@
+// Arrow Rush is designed as a single-column mobile layout. On a genuine phone that's just
+// "the screen", but viewed in a wide desktop browser (or a tablet) an unconstrained
+// single column stretches buttons/list items edge to edge and looks broken. Above the
+// breakpoint, frame it like a phone centered in the window instead of letting it stretch.
+@media (min-width: 560px) {
+  ion-app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+}

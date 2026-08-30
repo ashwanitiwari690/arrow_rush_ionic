@@ -1,0 +1,183 @@
+{
+  "levelId": 78,
+  "difficulty": "HARD",
+  "rows": 7,
+  "columns": 7,
+  "blocks": [
+    {
+      "id": "block_1",
+      "row": 1,
+      "column": 2,
+      "direction": "UP",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_2",
+      "row": 6,
+      "column": 5,
+      "direction": "RIGHT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_3",
+      "row": 0,
+      "column": 3,
+      "direction": "LEFT",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_4",
+      "row": 3,
+      "column": 2,
+      "direction": "LEFT",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_5",
+      "row": 5,
+      "column": 6,
+      "direction": "DOWN",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_6",
+      "row": 2,
+      "column": 2,
+      "direction": "LEFT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_7",
+      "row": 1,
+      "column": 5,
+      "direction": "UP",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_8",
+      "row": 3,
+      "column": 3,
+      "direction": "LEFT",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_9",
+      "row": 6,
+      "column": 3,
+      "direction": "RIGHT",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_10",
+      "row": 1,
+      "column": 3,
+      "direction": "UP",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_11",
+      "row": 4,
+      "column": 5,
+      "direction": "RIGHT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_12",
+      "row": 4,
+      "column": 2,
+      "direction": "RIGHT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_13",
+      "row": 2,
+      "column": 6,
+      "direction": "DOWN",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_14",
+      "row": 5,
+      "column": 2,
+      "direction": "DOWN",
+      "color": "red",
+      "type": "ARROW"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obstacle_1",
+      "row": 6,
+      "column": 0,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_2",
+      "row": 3,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_3",
+      "row": 1,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_4",
+      "row": 0,
+      "column": 6,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_5",
+      "row": 5,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_6",
+      "row": 4,
+      "column": 1,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_7",
+      "row": 1,
+      "column": 0,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_8",
+      "row": 3,
+      "column": 5,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_9",
+      "row": 2,
+      "column": 3,
+      "type": "WALL"
+    }
+  ],
+  "specialBlocks": [],
+  "timeLimitSeconds": 80,
+  "lives": 3,
+  "reward": {
+    "coins": 30,
+    "score": 1200
+  }
+}

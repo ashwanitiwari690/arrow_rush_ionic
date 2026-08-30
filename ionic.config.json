@@ -1,0 +1,7 @@
+{
+  "name": "arrow-rush-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

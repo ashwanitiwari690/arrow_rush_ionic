@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <rect width="400" height="500" fill="#331019" />
+  <ellipse cx="200" cy="150" rx="240" ry="120" fill="#ff5470" opacity="0.1" />
+
+  <!-- embers -->
+  <circle cx="70" cy="90" r="2.4" fill="#ffb347" opacity="0.75" />
+  <circle cx="180" cy="50" r="1.8" fill="#ffb347" opacity="0.55" />
+  <circle cx="300" cy="110" r="2.2" fill="#ff8c42" opacity="0.65" />
+  <circle cx="340" cy="60" r="1.6" fill="#ffb347" opacity="0.5" />
+  <circle cx="40" cy="160" r="1.6" fill="#ff8c42" opacity="0.5" />
+
+  <!-- smoke wisps -->
+  <ellipse cx="200" cy="70" rx="60" ry="18" fill="#4a2530" opacity="0.35" />
+  <ellipse cx="230" cy="40" rx="40" ry="12" fill="#4a2530" opacity="0.28" />
+
+  <!-- volcano silhouette -->
+  <polygon points="130,500 200,260 270,500" fill="#20080d" />
+  <polygon points="60,500 150,320 240,500" fill="#150609" opacity="0.9" />
+  <polygon points="220,500 300,330 390,500" fill="#150609" opacity="0.9" />
+
+  <!-- lava cracks -->
+  <polygon points="185,500 200,300 215,500" fill="#ff8c42" opacity="0.85" />
+  <path d="M170,500 L185,380 L165,340" stroke="#ffb347" stroke-width="4" fill="none" opacity="0.75" stroke-linecap="round" />
+  <path d="M230,500 L215,390 L235,350" stroke="#ffb347" stroke-width="4" fill="none" opacity="0.75" stroke-linecap="round" />
+
+  <!-- crater glow -->
+  <circle cx="200" cy="258" r="14" fill="#ffd447" opacity="0.9" />
+</svg>

@@ -1,0 +1,42 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 15, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.dialog-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+
+  h2 {
+    margin: 0 0 8px;
+    color: var(--ar-text);
+    font-size: 18px;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: var(--ar-text-dim);
+    font-size: 14px;
+  }
+
+  .dialog-actions {
+    display: flex;
+    gap: 10px;
+
+    ion-button {
+      flex: 1;
+      margin: 0;
+    }
+  }
+}

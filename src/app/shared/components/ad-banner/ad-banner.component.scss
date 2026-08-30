@@ -1,0 +1,11 @@
+.ad-banner {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ar-surface);
+  border: 1px dashed var(--ar-border);
+  border-radius: 8px;
+  color: var(--ar-text-dim);
+  font-size: 12px;
+}

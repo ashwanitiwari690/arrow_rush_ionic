@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <rect width="400" height="500" fill="#123322" />
+  <ellipse cx="200" cy="120" rx="220" ry="140" fill="#1a4a30" opacity="0.35" />
+
+  <!-- fireflies -->
+  <circle cx="60" cy="70" r="2.5" fill="#ffe17a" opacity="0.7" />
+  <circle cx="300" cy="140" r="2" fill="#ffe17a" opacity="0.55" />
+  <circle cx="150" cy="40" r="1.8" fill="#ffe17a" opacity="0.6" />
+  <circle cx="350" cy="60" r="2.2" fill="#ffe17a" opacity="0.5" />
+
+  <!-- back tree row (darker/parallax) -->
+  <g fill="#0e2a1c">
+    <polygon points="30,330 70,240 110,330" />
+    <polygon points="90,330 130,220 170,330" />
+    <polygon points="160,330 200,250 240,330" />
+    <polygon points="230,330 270,230 310,330" />
+    <polygon points="300,330 340,245 380,330" />
+    <polygon points="-10,330 20,260 50,330" />
+  </g>
+
+  <!-- front tree row -->
+  <g fill="#0a1f14">
+    <polygon points="0,500 45,360 90,500" />
+    <polygon points="70,500 120,330 170,500" />
+    <polygon points="150,500 195,350 240,500" />
+    <polygon points="220,500 270,320 320,500" />
+    <polygon points="300,500 345,345 390,500" />
+    <polygon points="-20,500 20,370 60,500" />
+    <polygon points="360,500 400,355 440,500" />
+  </g>
+</svg>

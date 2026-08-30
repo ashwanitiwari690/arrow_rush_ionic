@@ -1,0 +1,141 @@
+{
+  "levelId": 43,
+  "difficulty": "MEDIUM",
+  "rows": 6,
+  "columns": 6,
+  "blocks": [
+    {
+      "id": "block_1",
+      "row": 1,
+      "column": 5,
+      "direction": "UP",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_2",
+      "row": 1,
+      "column": 4,
+      "direction": "RIGHT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_3",
+      "row": 2,
+      "column": 5,
+      "direction": "UP",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_4",
+      "row": 0,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_5",
+      "row": 0,
+      "column": 2,
+      "direction": "LEFT",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_6",
+      "row": 1,
+      "column": 1,
+      "direction": "RIGHT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_7",
+      "row": 0,
+      "column": 3,
+      "direction": "LEFT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_8",
+      "row": 4,
+      "column": 1,
+      "direction": "DOWN",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_9",
+      "row": 2,
+      "column": 0,
+      "direction": "UP",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_10",
+      "row": 4,
+      "column": 5,
+      "direction": "DOWN",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_11",
+      "row": 3,
+      "column": 2,
+      "direction": "DOWN",
+      "color": "purple",
+      "type": "ARROW"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obstacle_1",
+      "row": 2,
+      "column": 1,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_2",
+      "row": 5,
+      "column": 0,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_3",
+      "row": 3,
+      "column": 0,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_4",
+      "row": 2,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_5",
+      "row": 5,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_6",
+      "row": 5,
+      "column": 3,
+      "type": "WALL"
+    }
+  ],
+  "specialBlocks": [],
+  "timeLimitSeconds": 90,
+  "lives": 3,
+  "reward": {
+    "coins": 20,
+    "score": 800
+  }
+}

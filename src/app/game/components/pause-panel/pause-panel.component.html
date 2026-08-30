@@ -1,0 +1,11 @@
+<div class="overlay">
+  <div class="panel">
+    <h1>PAUSED</h1>
+    <div class="actions">
+      <ion-button expand="block" color="primary" (click)="resumeGame.emit()">Resume</ion-button>
+      <ion-button expand="block" fill="outline" (click)="restart.emit()">Restart</ion-button>
+      <ion-button expand="block" fill="outline" (click)="openSettings.emit()">Settings</ion-button>
+      <ion-button expand="block" fill="clear" color="medium" (click)="exit.emit()">Exit</ion-button>
+    </div>
+  </div>
+</div>

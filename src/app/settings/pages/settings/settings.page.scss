@@ -1,0 +1,52 @@
+.settings-content {
+  --background: radial-gradient(circle at 50% 0%, #1c2340 0%, var(--ion-background-color) 55%);
+  --padding-top: 8px;
+}
+
+.section-title {
+  color: var(--ar-text);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin: 4px 0 10px 28px;
+}
+
+.settings-list {
+  background: transparent;
+  margin-bottom: 20px;
+
+  ion-item {
+    --background: var(--ar-surface);
+    --border-color: var(--ar-border);
+    --color: var(--ar-text);
+    margin: 0 12px 8px;
+    border-radius: 12px;
+
+    ion-icon[slot='start'] {
+      color: var(--ar-gold);
+      margin-inline-end: 14px;
+    }
+
+    .language-segment {
+      max-width: 130px;
+      --background: var(--ar-surface-2);
+
+      ion-segment-button {
+        --color: var(--ar-text-dim);
+        --color-checked: #1a1300;
+        --indicator-color: var(--ar-gold);
+        min-height: 30px;
+        font-weight: 800;
+        font-size: 12px;
+      }
+    }
+
+    ion-toggle {
+      --track-background: var(--ar-surface-2);
+      --track-background-checked: var(--ar-gold);
+      --handle-background: #6b7280;
+      --handle-background-checked: #1a1300;
+    }
+  }
+}

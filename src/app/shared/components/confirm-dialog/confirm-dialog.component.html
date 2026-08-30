@@ -1,0 +1,14 @@
+@if (isOpen) {
+  <div class="dialog-backdrop" (click)="cancelled.emit()">
+    <div class="dialog-card" (click)="$event.stopPropagation()" role="alertdialog" [attr.aria-label]="title">
+      <h2>{{ title }}</h2>
+      @if (message) {
+        <p>{{ message }}</p>
+      }
+      <div class="dialog-actions">
+        <ion-button fill="outline" color="medium" (click)="cancelled.emit()">{{ cancelText }}</ion-button>
+        <ion-button color="primary" (click)="confirmed.emit()">{{ confirmText }}</ion-button>
+      </div>
+    </div>
+  </div>
+}

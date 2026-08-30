@@ -1,0 +1,49 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Store</ion-title>
+    <ion-buttons slot="end">
+      <app-coin-balance></app-coin-balance>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="store-content">
+  <app-ad-banner></app-ad-banner>
+
+  <h2 class="section-title">Power-Ups</h2>
+  <div class="power-up-grid">
+    @for (item of items(); track item.type) {
+      <div class="power-up-item">
+        <ion-icon [name]="item.icon"></ion-icon>
+        <div class="item-info">
+          <span class="item-label">{{ item.label }}</span>
+          <span class="item-owned">Owned: {{ counts()[item.type] }}</span>
+        </div>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="purchasingType() === item.type"
+          (click)="buy(item)"
+        >
+          <app-coin-icon slot="start"></app-coin-icon>
+          {{ item.cost }}
+        </ion-button>
+        @if (insufficientFundsFor() === item.type) {
+          <p class="error">Not enough coins.</p>
+        }
+      </div>
+    }
+  </div>
+
+  <h2 class="section-title">Themes</h2>
+  <ion-button expand="block" fill="outline" class="themes-link" (click)="onOpenThemes()">
+    <ion-icon slot="start" name="color-palette"></ion-icon>
+    Browse Themes
+  </ion-button>
+
+  <h2 class="section-title">Cosmetics</h2>
+  <p class="empty-state">More cosmetics are coming soon.</p>
+</ion-content>

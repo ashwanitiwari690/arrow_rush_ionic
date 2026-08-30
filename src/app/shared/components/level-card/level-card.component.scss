@@ -1,0 +1,67 @@
+.level-node {
+  position: relative;
+  width: clamp(64px, 19vw, 80px);
+  height: clamp(64px, 19vw, 80px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--ar-surface-2), var(--ar-surface));
+  border: 3px solid var(--ar-border);
+  border-bottom-color: rgba(0, 0, 0, 0.4);
+  color: var(--ar-text);
+  font-weight: 800;
+  font-size: clamp(20px, 5.5vw, 24px);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08), 0 6px 14px rgba(0, 0, 0, 0.45);
+  padding: 0;
+
+  &.locked {
+    opacity: 0.55;
+    color: var(--ar-text-dim);
+  }
+
+  &.completed {
+    border-color: var(--ar-gold);
+    background: linear-gradient(145deg, #3a3212, var(--ar-surface));
+  }
+
+  &.current {
+    border-color: var(--ar-gold);
+    box-shadow: 0 0 0 5px rgba(255, 204, 51, 0.22), 0 0 22px rgba(255, 204, 51, 0.6);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  .lock-icon {
+    font-size: clamp(24px, 6.5vw, 28px);
+  }
+
+  .stars {
+    position: absolute;
+    bottom: -18px;
+    display: flex;
+    gap: 1px;
+
+    ion-icon {
+      font-size: 14px;
+      color: var(--ar-gold);
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    }
+  }
+
+  .current-badge {
+    position: absolute;
+    top: -14px;
+    font-size: 22px;
+    color: var(--ar-gold);
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}

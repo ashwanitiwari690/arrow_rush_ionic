@@ -1,0 +1,103 @@
+.level-map-content {
+  // Fallback shown briefly before the first zone-section paints over it.
+  --background: #0a0d1c;
+}
+
+.path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.55) 0,
+      rgba(255, 255, 255, 0.55) 6px,
+      transparent 6px,
+      transparent 14px
+    );
+    transform: translateX(-50%);
+    z-index: 0;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6));
+  }
+}
+
+.zone-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 40px;
+  background-repeat: repeat-y;
+  background-position: top center;
+  background-size: min(100%, 480px) auto;
+}
+
+// Actual illustrated tile images (src/assets/backgrounds/*.svg) — hand-drawn, original
+// artwork, not a licensed asset — repeated down each difficulty band's full height.
+.zone-bg-forest {
+  background-image: url('/assets/backgrounds/forest-bg.svg');
+  background-color: #123322;
+}
+.zone-bg-desert {
+  background-image: url('/assets/backgrounds/desert-bg.svg');
+  background-color: #3a2912;
+}
+.zone-bg-frost {
+  background-image: url('/assets/backgrounds/frost-bg.svg');
+  background-color: #123049;
+}
+.zone-bg-volcano {
+  background-image: url('/assets/backgrounds/volcano-bg.svg');
+  background-color: #331019;
+}
+
+.zone-banner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 26px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(10, 12, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(3px);
+  color: var(--ar-text);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  ion-icon {
+    color: var(--ar-gold);
+    font-size: 16px;
+  }
+}
+
+.node-row {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+
+  &.align-left {
+    justify-content: flex-start;
+  }
+  &.align-center {
+    justify-content: center;
+  }
+  &.align-right {
+    justify-content: flex-end;
+  }
+}

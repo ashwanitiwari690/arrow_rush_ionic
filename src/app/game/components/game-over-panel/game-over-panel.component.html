@@ -1,0 +1,21 @@
+<div class="overlay">
+  <div class="panel">
+    <h1>GAME OVER</h1>
+    <p>Out of time or out of moves. Give it another shot!</p>
+
+    <div class="actions">
+      <ion-button expand="block" color="primary" (click)="retry.emit()">Retry</ion-button>
+      @if (adAvailable) {
+        <ion-button
+          expand="block"
+          fill="outline"
+          [disabled]="isProcessingAd"
+          (click)="watchAdAndContinue.emit()"
+        >
+          {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad & Continue' }}
+        </ion-button>
+      }
+      <ion-button expand="block" fill="clear" (click)="levelMap.emit()">Level Map</ion-button>
+    </div>
+  </div>
+</div>

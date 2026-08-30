@@ -1,0 +1,62 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Daily Challenge</ion-title>
+    <ion-buttons slot="end">
+      <app-coin-balance></app-coin-balance>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="daily-content">
+  <div class="daily-layout">
+  @if (status(); as s) {
+    <div class="daily-card">
+      <ion-icon name="trophy" class="trophy"></ion-icon>
+      <h1>DAILY CHALLENGE</h1>
+      <p>Complete today's challenge and win rewards!</p>
+
+      <div class="reward-row">
+        <div class="reward-chip">
+          <app-coin-icon></app-coin-icon>
+          {{ reward.coins }}
+        </div>
+        <div class="reward-chip">
+          <ion-icon name="ribbon"></ion-icon>
+          {{ reward.score }} pts
+        </div>
+      </div>
+
+      <p class="meta">Level {{ s.levelId }} &middot; Attempts left today: {{ attemptsRemaining }}</p>
+
+      <ion-button
+        expand="block"
+        color="primary"
+        [disabled]="attemptsRemaining <= 0 && !s.completed"
+        (click)="onPlay()"
+      >
+        {{ s.completed ? 'Play Again' : 'PLAY NOW' }}
+      </ion-button>
+
+      @if (s.completed && !s.rewardClaimed) {
+        <ion-button
+          expand="block"
+          fill="outline"
+          [disabled]="isClaiming"
+          (click)="onClaim()"
+        >
+          Claim Reward
+        </ion-button>
+      }
+
+      @if (s.rewardClaimed) {
+        <p class="claimed">Reward claimed — come back tomorrow!</p>
+      }
+    </div>
+  } @else {
+    <p class="empty-state">Loading daily challenge…</p>
+  }
+  </div>
+</ion-content>

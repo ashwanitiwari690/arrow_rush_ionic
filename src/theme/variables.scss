@@ -1,0 +1,92 @@
+// Arrow Rush — dark premium gaming palette.
+// Ionic's own CSS variables are overridden here so native components (buttons, alerts,
+// toasts) match the game's look; the --ar-* custom properties below are Arrow Rush's own
+// design tokens, consumed by every game component's SCSS instead of hardcoded colors.
+
+:root {
+  --ion-color-primary: #ffcc33;
+  --ion-color-primary-rgb: 255, 204, 51;
+  --ion-color-primary-contrast: #14152b;
+  --ion-color-primary-contrast-rgb: 20, 21, 43;
+  --ion-color-primary-shade: #e0b42d;
+  --ion-color-primary-tint: #ffd247;
+
+  --ion-color-secondary: #38f9ff;
+  --ion-color-secondary-rgb: 56, 249, 255;
+  --ion-color-secondary-contrast: #0a0a1a;
+  --ion-color-secondary-contrast-rgb: 10, 10, 26;
+  --ion-color-secondary-shade: #31dbe0;
+  --ion-color-secondary-tint: #4cf9ff;
+
+  --ion-color-danger: #ff5470;
+  --ion-color-danger-rgb: 255, 84, 112;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #e04a63;
+  --ion-color-danger-tint: #ff657e;
+
+  --ion-color-success: #35d07f;
+  --ion-color-success-rgb: 53, 208, 127;
+  --ion-color-success-contrast: #0a0a1a;
+  --ion-color-success-contrast-rgb: 10, 10, 26;
+  --ion-color-success-shade: #2fb770;
+  --ion-color-success-tint: #49d58c;
+
+  --ion-background-color: #0a0d1c;
+  --ion-background-color-rgb: 10, 13, 28;
+  --ion-text-color: #f2f3ff;
+  --ion-text-color-rgb: 242, 243, 255;
+
+  --ion-toolbar-background: #10142b;
+  --ion-item-background: #141834;
+  --ion-card-background: #141834;
+
+  // Fixed arrow identity colors — never swapped by theme, so direction/color stays a
+  // consistent, learnable signal for the player across every board skin.
+  --ar-arrow-purple: #a855f7;
+  --ar-arrow-blue: #3b82f6;
+  --ar-arrow-green: #22c55e;
+  --ar-arrow-red: #ef4444;
+  --ar-arrow-yellow: #fbbf24;
+
+  --ar-gold: #ffcc33;
+  --ar-text: #f2f3ff;
+  --ar-text-dim: #9aa0c3;
+  --ar-surface: #141834;
+  --ar-surface-2: #1c2148;
+  --ar-border: #2b3163;
+
+  // Board theme tokens — overridden per theme-* class below (applied to <body> by ThemeService).
+  --ar-board-bg: #12172b;
+  --ar-cell-bg: #1c2340;
+  --ar-cell-border: #2c3660;
+  --ar-accent: #ffcc33;
+}
+
+body.theme-classic {
+  --ar-board-bg: #12172b;
+  --ar-cell-bg: #1c2340;
+  --ar-cell-border: #2c3660;
+  --ar-accent: #ffcc33;
+}
+
+body.theme-neon {
+  --ar-board-bg: #0a0a1a;
+  --ar-cell-bg: #161034;
+  --ar-cell-border: #3d2ea8;
+  --ar-accent: #38f9ff;
+}
+
+body.theme-wood {
+  --ar-board-bg: #2b1a10;
+  --ar-cell-bg: #4a2f1c;
+  --ar-cell-border: #6b4526;
+  --ar-accent: #f2a541;
+}
+
+body.theme-space {
+  --ar-board-bg: #05060f;
+  --ar-cell-bg: #141433;
+  --ar-cell-border: #2d2d63;
+  --ar-accent: #a06bff;
+}

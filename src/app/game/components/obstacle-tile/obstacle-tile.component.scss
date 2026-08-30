@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.obstacle-tile {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05) 0 6px,
+      transparent 6px 12px
+    ),
+    linear-gradient(160deg, #7b8794, #364152 60%, #1f2733);
+  border: 2px solid #4b5563;
+  border-bottom-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.45),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 12%;
+    width: 10%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e5e7eb, #6b7280 70%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  &::before {
+    left: 12%;
+  }
+  &::after {
+    right: 12%;
+  }
+
+  ion-icon {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: clamp(16px, 5vw, 24px);
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  }
+}

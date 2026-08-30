@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="level-node"
+  [class.locked]="!unlocked"
+  [class.completed]="completed"
+  [class.current]="isCurrent"
+  [disabled]="!unlocked"
+  (click)="onTap()"
+  [attr.aria-label]="unlocked ? ('Level ' + level.levelId) : ('Level ' + level.levelId + ', locked')"
+>
+  @if (!unlocked) {
+    <ion-icon name="lock-closed" class="lock-icon" aria-hidden="true"></ion-icon>
+  }
+  @if (unlocked) {
+    <span class="level-number">{{ level.levelId }}</span>
+  }
+
+  @if (unlocked && completed) {
+    <div class="stars" aria-hidden="true">
+      @for (s of [1, 2, 3]; track s) {
+        <ion-icon [name]="s <= stars ? 'star' : 'star-outline'"></ion-icon>
+      }
+    </div>
+  }
+
+  @if (isCurrent) {
+    <ion-icon name="trophy" class="current-badge" aria-hidden="true"></ion-icon>
+  }
+</button>

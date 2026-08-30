@@ -1,0 +1,83 @@
+.daily-content {
+  --background: radial-gradient(circle at 50% 0%, #241a44 0%, var(--ion-background-color) 55%);
+  --padding-start: 20px;
+  --padding-end: 20px;
+}
+
+// ion-content's shadow-DOM scroll container doesn't inherit flex centering set on the
+// host element itself, so the card is centered via this plain light-DOM wrapper instead.
+.daily-layout {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-card {
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 28px 22px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-gold);
+  border-radius: 22px;
+  text-align: center;
+
+  .trophy {
+    font-size: 44px;
+    color: var(--ar-gold);
+  }
+
+  h1 {
+    margin: 10px 0 4px;
+    font-size: 20px;
+    letter-spacing: 1px;
+    color: var(--ar-text);
+  }
+
+  p {
+    color: var(--ar-text-dim);
+    font-size: 13px;
+    margin: 0 0 16px;
+  }
+}
+
+.reward-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ar-surface-2);
+  border: 1px solid var(--ar-border);
+  color: var(--ar-gold);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.meta {
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+ion-button {
+  margin: 0 0 10px;
+  --border-radius: 12px;
+}
+
+.claimed {
+  color: var(--ar-gold);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.empty-state {
+  color: var(--ar-text-dim);
+  text-align: center;
+}

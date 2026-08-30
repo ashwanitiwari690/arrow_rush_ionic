@@ -1,0 +1,51 @@
+<ion-content [fullscreen]="true" class="home-content">
+  <div class="home-layout">
+    <div class="top-bar">
+      <app-coin-balance></app-coin-balance>
+      <button type="button" class="icon-btn" (click)="onSettings()" aria-label="Settings">
+        <ion-icon name="settings-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="hero">
+      <div class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" class="ring ring-outer" />
+          <circle cx="50" cy="50" r="34" class="ring ring-mid" />
+          <circle cx="50" cy="50" r="22" class="ring ring-inner" />
+          <circle cx="50" cy="50" r="6" class="ring-core" />
+          <path d="M18 82 L74 26 L60 24 L76 24 L76 40 L74 26" class="arrow" />
+        </svg>
+      </div>
+
+      <h1 class="ar-glow-text">ARROW RUSH</h1>
+      <p class="tagline">ESCAPE THE BLOCKS!</p>
+    </div>
+
+    <div class="menu">
+      <ion-button expand="block" color="primary" class="primary-cta" (click)="onPlay()">
+        <ion-icon slot="start" name="play"></ion-icon>
+        PLAY
+      </ion-button>
+
+      <div class="menu-grid">
+        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onDailyChallenge()">
+          <ion-icon slot="start" name="calendar"></ion-icon>
+          DAILY
+        </ion-button>
+        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onLevels()">
+          <ion-icon slot="start" name="grid"></ion-icon>
+          LEVELS
+        </ion-button>
+        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onStore()">
+          <ion-icon slot="start" name="storefront"></ion-icon>
+          STORE
+        </ion-button>
+        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onProfile()">
+          <ion-icon slot="start" name="person"></ion-icon>
+          PROFILE
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

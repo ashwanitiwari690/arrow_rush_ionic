@@ -1,0 +1,12 @@
+<button
+  type="button"
+  class="arrow-block"
+  [class]="'color-' + block.color"
+  [class.shaking]="isShaking"
+  [class.hinted]="isHinted"
+  [ngClass]="escapeClass"
+  (click)="tap.emit(block.id)"
+  [attr.aria-label]="'Arrow pointing ' + (block.direction | lowercase) + ', color ' + block.color"
+>
+  <ion-icon [name]="icon"></ion-icon>
+</button>

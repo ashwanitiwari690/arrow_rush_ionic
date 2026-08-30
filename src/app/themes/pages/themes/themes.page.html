@@ -1,0 +1,31 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/store" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Themes</ion-title>
+    <ion-buttons slot="end">
+      <app-coin-balance></app-coin-balance>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="themes-content">
+  <p class="hint">Amazing Themes — Beautiful Experience</p>
+
+  <div class="theme-grid">
+    @for (theme of themes(); track theme.id) {
+      <div class="theme-cell">
+        <app-theme-card
+          [theme]="theme"
+          [isUnlocked]="isUnlocked(theme.id)"
+          [isSelected]="selectedThemeId() === theme.id"
+          (choose)="choose($event)"
+        ></app-theme-card>
+        @if (insufficientFundsFor() === theme.id) {
+          <p class="error">Not enough coins.</p>
+        }
+      </div>
+    }
+  </div>
+</ion-content>

@@ -1,0 +1,6 @@
+{
+  "startingCoins": 0,
+  "livesPerLevel": 3,
+  "livesRegenMinutes": 10,
+  "totalLevels": 100
+}

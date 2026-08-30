@@ -1,0 +1,15 @@
+<button
+  type="button"
+  class="power-up-button"
+  [class]="'accent-' + accent"
+  [class.active]="active"
+  [disabled]="isDisabled"
+  (click)="activate.emit()"
+  [attr.aria-label]="label + ', ' + count + ' remaining'"
+>
+  <span class="badge">
+    <ion-icon [name]="icon"></ion-icon>
+  </span>
+  <span class="label">{{ label }}</span>
+  <span class="count">{{ count }}</span>
+</button>

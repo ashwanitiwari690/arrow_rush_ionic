@@ -1,0 +1,69 @@
+{
+  "levelId": 6,
+  "difficulty": "EASY",
+  "rows": 5,
+  "columns": 5,
+  "blocks": [
+    {
+      "id": "block_1",
+      "row": 2,
+      "column": 2,
+      "direction": "RIGHT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_2",
+      "row": 4,
+      "column": 1,
+      "direction": "RIGHT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_3",
+      "row": 0,
+      "column": 2,
+      "direction": "DOWN",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_4",
+      "row": 0,
+      "column": 0,
+      "direction": "DOWN",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_5",
+      "row": 3,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "yellow",
+      "type": "ARROW"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obstacle_1",
+      "row": 2,
+      "column": 1,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_2",
+      "row": 0,
+      "column": 1,
+      "type": "WALL"
+    }
+  ],
+  "specialBlocks": [],
+  "timeLimitSeconds": 100,
+  "lives": 3,
+  "reward": {
+    "coins": 10,
+    "score": 500
+  }
+}

@@ -1,0 +1,88 @@
+<ion-content [fullscreen]="true" class="game-play-content">
+  @if (level(); as lvl) {
+    <div class="game-play-layout">
+      <app-game-header
+        [levelId]="lvl.levelId"
+        [remainingSeconds]="timer.remainingSeconds()"
+        [lives]="livesCount()"
+        [maxLives]="3"
+        (pauseTap)="onPauseTap()"
+        (homeTap)="onHomeTap()"
+      ></app-game-header>
+
+      <div class="board-wrap">
+        @if (gameStateService.state(); as state) {
+          <app-game-board
+            [state]="state"
+            [hintedBlockId]="hintedBlockId()"
+            [blocked]="blockedFeedback()"
+            (blockTap)="onBlockTap($event)"
+          ></app-game-board>
+        }
+      </div>
+
+      <div class="power-up-bar">
+        <app-power-up-button
+          icon="bulb"
+          label="Hint"
+          accent="hint"
+          [count]="powerUpCounts().HINT"
+          (activate)="onPowerUp('HINT')"
+        ></app-power-up-button>
+        <app-power-up-button
+          icon="arrow-undo"
+          label="Undo"
+          accent="undo"
+          [count]="powerUpCounts().UNDO"
+          (activate)="onPowerUp('UNDO')"
+        ></app-power-up-button>
+        <app-power-up-button
+          icon="shuffle"
+          label="Shuffle"
+          accent="shuffle"
+          [count]="powerUpCounts().SHUFFLE"
+          (activate)="onPowerUp('SHUFFLE')"
+        ></app-power-up-button>
+        <app-power-up-button
+          icon="flash"
+          label="Extra"
+          accent="extra"
+          [count]="powerUpCounts().EXTRA"
+          (activate)="onPowerUp('EXTRA')"
+        ></app-power-up-button>
+      </div>
+    </div>
+  }
+
+  @if (isPaused()) {
+    <app-pause-panel
+      (resumeGame)="onResume()"
+      (restart)="onRestartFromPause()"
+      (openSettings)="onSettingsFromPause()"
+      (exit)="onExitFromPause()"
+    ></app-pause-panel>
+  }
+
+  @if (gameStateService.isComplete()) {
+    <app-level-complete-panel
+      [score]="gameStateService.state()?.score ?? 0"
+      [coinsEarned]="coinsEarned()"
+      [timeSeconds]="timer.elapsedSeconds()"
+      [stars]="starsEarned()"
+      [hasNextLevel]="hasNextLevel"
+      (nextLevel)="onNextLevel()"
+      (replay)="onReplay()"
+      (levelMap)="onLevelMap()"
+    ></app-level-complete-panel>
+  }
+
+  @if (isGameOver()) {
+    <app-game-over-panel
+      [adAvailable]="adAvailable"
+      [isProcessingAd]="isProcessingAd()"
+      (retry)="onRetry()"
+      (watchAdAndContinue)="onWatchAdAndContinue()"
+      (levelMap)="onLevelMap()"
+    ></app-game-over-panel>
+  }
+</ion-content>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <rect width="400" height="500" fill="#3a2912" />
+  <circle cx="320" cy="90" r="55" fill="#f2a541" opacity="0.28" />
+  <circle cx="320" cy="90" r="30" fill="#f2c76b" opacity="0.4" />
+
+  <!-- stars -->
+  <circle cx="60" cy="50" r="1.6" fill="#ffe9c2" opacity="0.5" />
+  <circle cx="140" cy="30" r="1.4" fill="#ffe9c2" opacity="0.4" />
+  <circle cx="220" cy="60" r="1.8" fill="#ffe9c2" opacity="0.45" />
+
+  <!-- far dune -->
+  <path d="M0,300 Q100,250 200,290 T400,270 V500 H0 Z" fill="#4a3214" opacity="0.65" />
+
+  <!-- near dune -->
+  <path d="M0,380 Q120,320 220,370 T400,350 V500 H0 Z" fill="#2e1c0a" />
+
+  <!-- cactus silhouettes -->
+  <g fill="#24170a">
+    <path d="M60,500 V420 q0,-14 14,-14 q14,0 14,14 V440 M60,440 h-18 q-10,0 -10,-10 v-10 M88,430 h16 q10,0 10,10 v6" stroke="#24170a" stroke-width="12" fill="none" stroke-linecap="round" />
+    <path d="M330,500 V440 q0,-12 12,-12 q12,0 12,12 V460" stroke="#24170a" stroke-width="10" fill="none" stroke-linecap="round" />
+  </g>
+</svg>

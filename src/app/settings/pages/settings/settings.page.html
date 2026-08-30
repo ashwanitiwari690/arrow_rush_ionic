@@ -1,0 +1,67 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Settings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="settings-content">
+  <h2 class="section-title">Preferences</h2>
+  <ion-list class="settings-list" lines="full">
+    <ion-item>
+      <ion-icon name="volume-high-outline" slot="start"></ion-icon>
+      <ion-label>Sound</ion-label>
+      <ion-toggle slot="end" [checked]="settings().soundEnabled" (ionChange)="toggle('soundEnabled')"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-icon name="musical-notes-outline" slot="start"></ion-icon>
+      <ion-label>Music</ion-label>
+      <ion-toggle slot="end" [checked]="settings().musicEnabled" (ionChange)="toggle('musicEnabled')"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-icon name="phone-portrait-outline" slot="start"></ion-icon>
+      <ion-label>Vibration</ion-label>
+      <ion-toggle slot="end" [checked]="settings().vibrationEnabled" (ionChange)="toggle('vibrationEnabled')"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-icon name="notifications-outline" slot="start"></ion-icon>
+      <ion-label>Notifications</ion-label>
+      <ion-toggle slot="end" [checked]="settings().notificationsEnabled" (ionChange)="toggle('notificationsEnabled')"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-icon name="language-outline" slot="start"></ion-icon>
+      <ion-label>Language</ion-label>
+      <ion-segment
+        slot="end"
+        class="language-segment"
+        [value]="settings().language"
+        (ionChange)="setLanguage($event.detail.value)"
+      >
+        <ion-segment-button value="en">
+          <ion-label>EN</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="hi">
+          <ion-label>HI</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </ion-item>
+  </ion-list>
+
+  <h2 class="section-title">About</h2>
+  <ion-list class="settings-list" lines="full">
+    <ion-item button detail>
+      <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+      <ion-label>Privacy Policy</ion-label>
+    </ion-item>
+    <ion-item button detail>
+      <ion-icon name="document-text-outline" slot="start"></ion-icon>
+      <ion-label>Terms of Service</ion-label>
+    </ion-item>
+    <ion-item button detail>
+      <ion-icon name="information-circle-outline" slot="start"></ion-icon>
+      <ion-label>About Arrow Rush</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

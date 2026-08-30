@@ -1,0 +1,42 @@
+<ion-header [translucent]="true" class="ar-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>1000+ Challenging Levels</ion-title>
+    <ion-buttons slot="end">
+      <app-coin-balance></app-coin-balance>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="level-map-content">
+  <div class="path">
+    @for (zone of zoneGroups(); track zone.difficulty + zone.levels[0].globalIndex) {
+      <div class="zone-section" [class]="zone.style.backgroundClass">
+        <div class="zone-banner">
+          <ion-icon [name]="zone.style.icon"></ion-icon>
+          <span>{{ zone.style.name }}</span>
+        </div>
+
+        @for (entry of zone.levels; track entry.level.levelId) {
+          <div
+            class="node-row"
+            [class.align-left]="rowOffset(entry.globalIndex) === 'left'"
+            [class.align-center]="rowOffset(entry.globalIndex) === 'center'"
+            [class.align-right]="rowOffset(entry.globalIndex) === 'right'"
+          >
+            <div [attr.id]="entry.level.levelId === currentLevelId ? 'current-node' : null">
+              <app-level-card
+                [level]="entry.level"
+                [progress]="progress()[entry.level.levelId]"
+                [isCurrent]="entry.level.levelId === currentLevelId"
+                (levelSelected)="onSelectLevel($event)"
+              ></app-level-card>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</ion-content>

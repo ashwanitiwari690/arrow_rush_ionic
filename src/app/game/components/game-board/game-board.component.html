@@ -1,0 +1,33 @@
+<div
+  class="game-board"
+  [style.gridTemplateColumns]="'repeat(' + state.columns + ', 1fr)'"
+  [style.gridTemplateRows]="'repeat(' + state.rows + ', 1fr)'"
+  [style.aspectRatio]="state.columns + ' / ' + state.rows"
+>
+  @for (i of cellIndices; track i) {
+    <div class="cell-bg"></div>
+  }
+
+  @for (obstacle of state.obstacles; track obstacle.id) {
+    <div class="grid-item" [style.gridRow]="obstacle.row + 1" [style.gridColumn]="obstacle.column + 1">
+      <app-obstacle-tile [obstacle]="obstacle"></app-obstacle-tile>
+    </div>
+  }
+
+  @for (block of state.blocks; track block.id) {
+    <div class="grid-item" [style.gridRow]="block.row + 1" [style.gridColumn]="block.column + 1">
+      <app-arrow-block
+        [block]="block"
+        [isHinted]="block.id === hintedBlockId"
+        [isShaking]="block.id === shakingBlockId"
+        (tap)="onTap($event)"
+      ></app-arrow-block>
+    </div>
+  }
+
+  @for (ghost of ghosts; track ghost.key) {
+    <div class="grid-item ghost" [style.gridRow]="ghost.block.row + 1" [style.gridColumn]="ghost.block.column + 1">
+      <app-arrow-block [block]="ghost.block" [isEscaping]="true"></app-arrow-block>
+    </div>
+  }
+</div>

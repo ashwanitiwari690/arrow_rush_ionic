@@ -1,0 +1,27 @@
+{
+  "levelCompletionCoins": {
+    "EASY": 10,
+    "MEDIUM": 20,
+    "HARD": 30,
+    "EXPERT": 40,
+    "MASTER": 50,
+    "INSANE": 60
+  },
+  "starThresholds": {
+    "threeStarMoveRatio": 1.0,
+    "twoStarMoveRatio": 1.5
+  },
+  "dailyChallengeReward": {
+    "coins": 50,
+    "score": 1000
+  },
+  "achievementRewards": {
+    "FIRST_WIN": 20,
+    "LEVELS_10": 50,
+    "LEVELS_50": 150,
+    "LEVELS_100": 300,
+    "HARD_LEVELS_10": 100,
+    "NO_HINT_CLEAR": 30,
+    "UNDER_TIME_LIMIT": 25
+  }
+}

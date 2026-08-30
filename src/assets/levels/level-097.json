@@ -1,0 +1,239 @@
+{
+  "levelId": 97,
+  "difficulty": "EXPERT",
+  "rows": 8,
+  "columns": 8,
+  "blocks": [
+    {
+      "id": "block_1",
+      "row": 5,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_2",
+      "row": 2,
+      "column": 6,
+      "direction": "RIGHT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_3",
+      "row": 3,
+      "column": 5,
+      "direction": "RIGHT",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_4",
+      "row": 5,
+      "column": 2,
+      "direction": "LEFT",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_5",
+      "row": 4,
+      "column": 2,
+      "direction": "LEFT",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_6",
+      "row": 6,
+      "column": 4,
+      "direction": "DOWN",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_7",
+      "row": 6,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_8",
+      "row": 0,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_9",
+      "row": 1,
+      "column": 0,
+      "direction": "UP",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_10",
+      "row": 1,
+      "column": 6,
+      "direction": "RIGHT",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_11",
+      "row": 2,
+      "column": 4,
+      "direction": "RIGHT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_12",
+      "row": 3,
+      "column": 0,
+      "direction": "UP",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_13",
+      "row": 6,
+      "column": 3,
+      "direction": "DOWN",
+      "color": "green",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_14",
+      "row": 7,
+      "column": 0,
+      "direction": "UP",
+      "color": "red",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_15",
+      "row": 1,
+      "column": 3,
+      "direction": "LEFT",
+      "color": "yellow",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_16",
+      "row": 2,
+      "column": 1,
+      "direction": "LEFT",
+      "color": "purple",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_17",
+      "row": 5,
+      "column": 3,
+      "direction": "LEFT",
+      "color": "blue",
+      "type": "ARROW"
+    },
+    {
+      "id": "block_18",
+      "row": 3,
+      "column": 3,
+      "direction": "RIGHT",
+      "color": "green",
+      "type": "ARROW"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obstacle_1",
+      "row": 0,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_2",
+      "row": 0,
+      "column": 7,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_3",
+      "row": 3,
+      "column": 1,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_4",
+      "row": 7,
+      "column": 6,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_5",
+      "row": 0,
+      "column": 2,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_6",
+      "row": 4,
+      "column": 3,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_7",
+      "row": 5,
+      "column": 7,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_8",
+      "row": 3,
+      "column": 2,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_9",
+      "row": 0,
+      "column": 3,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_10",
+      "row": 4,
+      "column": 6,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_11",
+      "row": 1,
+      "column": 5,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_12",
+      "row": 4,
+      "column": 4,
+      "type": "WALL"
+    },
+    {
+      "id": "obstacle_13",
+      "row": 6,
+      "column": 5,
+      "type": "WALL"
+    }
+  ],
+  "specialBlocks": [],
+  "timeLimitSeconds": 75,
+  "lives": 3,
+  "reward": {
+    "coins": 40,
+    "score": 1600
+  }
+}

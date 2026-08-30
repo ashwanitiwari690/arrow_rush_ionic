@@ -1,0 +1,16 @@
+.coin-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  color: var(--ar-gold);
+  font-weight: 700;
+  font-size: clamp(13px, 3.4vw, 16px);
+
+  ion-icon {
+    font-size: 1.2em;
+  }
+}

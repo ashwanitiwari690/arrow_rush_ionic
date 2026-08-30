@@ -1,0 +1,48 @@
+{
+  "themes": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "cost": 0,
+      "colors": {
+        "boardBg": "#12172b",
+        "cellBg": "#1c2340",
+        "cellBorder": "#2c3660",
+        "accent": "#ffcc33"
+      }
+    },
+    {
+      "id": "neon",
+      "name": "Neon",
+      "cost": 1000,
+      "colors": {
+        "boardBg": "#0a0a1a",
+        "cellBg": "#161034",
+        "cellBorder": "#3d2ea8",
+        "accent": "#38f9ff"
+      }
+    },
+    {
+      "id": "wood",
+      "name": "Wood",
+      "cost": 1500,
+      "colors": {
+        "boardBg": "#2b1a10",
+        "cellBg": "#4a2f1c",
+        "cellBorder": "#6b4526",
+        "accent": "#f2a541"
+      }
+    },
+    {
+      "id": "space",
+      "name": "Space",
+      "cost": 2000,
+      "colors": {
+        "boardBg": "#05060f",
+        "cellBg": "#141433",
+        "cellBorder": "#2d2d63",
+        "accent": "#a06bff"
+      }
+    }
+  ]
+}

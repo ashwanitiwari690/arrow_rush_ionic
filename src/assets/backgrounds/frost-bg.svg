@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <rect width="400" height="500" fill="#123049" />
+  <ellipse cx="150" cy="90" rx="260" ry="90" fill="#38f9ff" opacity="0.08" />
+
+  <!-- snowflakes -->
+  <circle cx="50" cy="60" r="2.2" fill="#eaf6ff" opacity="0.6" />
+  <circle cx="130" cy="30" r="1.6" fill="#eaf6ff" opacity="0.45" />
+  <circle cx="260" cy="70" r="2" fill="#eaf6ff" opacity="0.55" />
+  <circle cx="340" cy="40" r="1.8" fill="#eaf6ff" opacity="0.5" />
+  <circle cx="20" cy="150" r="1.6" fill="#eaf6ff" opacity="0.4" />
+
+  <!-- back peaks -->
+  <g fill="#1a3f5c" opacity="0.7">
+    <polygon points="-10,320 60,200 130,320" />
+    <polygon points="100,320 170,220 240,320" />
+    <polygon points="200,320 270,190 340,320" />
+    <polygon points="300,320 370,230 440,320" />
+  </g>
+  <g fill="#eaf6ff" opacity="0.5">
+    <polygon points="40,220 60,200 80,220" />
+    <polygon points="150,240 170,220 190,240" />
+    <polygon points="250,210 270,190 290,210" />
+    <polygon points="350,240 370,230 390,250" />
+  </g>
+
+  <!-- front peaks -->
+  <g fill="#0c2038">
+    <polygon points="-20,500 70,340 160,500" />
+    <polygon points="120,500 210,360 300,500" />
+    <polygon points="260,500 350,330 440,500" />
+  </g>
+  <g fill="#eaf6ff" opacity="0.6">
+    <polygon points="45,380 70,340 95,380" />
+    <polygon points="185,400 210,360 235,400" />
+    <polygon points="325,370 350,330 375,370" />
+  </g>
+</svg>
