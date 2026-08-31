@@ -1,8 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Achievement } from '../models/economy.models';
 import { StorageService } from './storage.service';
-import { ConfigService } from './config.service';
-import { CoinService } from './coin.service';
 
 const ACHIEVEMENTS_KEY = 'arrow_rush.achievements';
 
@@ -26,13 +24,11 @@ export interface LevelCompletionContext {
   totalLevels: number;
 }
 
-/** Static achievement catalog + unlock state. Coin rewards on unlock come from
- * reward-config.json's `achievementRewards`, never a literal in this file. */
+/** Static achievement catalog + unlock state. Purely a progress/badge tracker — unlocking
+ * an achievement does not credit coins (see CoinService for the actual reward paths). */
 @Injectable({ providedIn: 'root' })
 export class AchievementService {
   private readonly storage = inject(StorageService);
-  private readonly config = inject(ConfigService);
-  private readonly coins = inject(CoinService);
 
   private readonly _achievements = signal<Achievement[]>(
     DEFINITIONS.map((d) => ({ ...d, isUnlocked: false, unlockedAt: null })),
@@ -77,7 +73,6 @@ export class AchievementService {
   }
 
   private async unlock(ids: string[]): Promise<Achievement[]> {
-    const rewardConfig = await this.config.getRewardConfig();
     const current = this._achievements();
     const newlyUnlocked: Achievement[] = [];
     const now = Date.now();
@@ -97,13 +92,6 @@ export class AchievementService {
     const stored: Record<string, number> = {};
     for (const a of next) if (a.isUnlocked && a.unlockedAt) stored[a.id] = a.unlockedAt;
     await this.storage.set(ACHIEVEMENTS_KEY, stored);
-
-    for (const a of newlyUnlocked) {
-      const reward = rewardConfig.achievementRewards[a.id] ?? 0;
-      if (reward > 0) {
-        await this.coins.addCoins(reward, 'ACHIEVEMENT', a.id);
-      }
-    }
 
     return newlyUnlocked;
   }

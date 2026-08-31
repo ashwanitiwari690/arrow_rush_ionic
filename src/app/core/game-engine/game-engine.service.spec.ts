@@ -51,7 +51,7 @@ describe('GameEngineService', () => {
     expect(result.state.moves).toBe(1);
   });
 
-  it('blocks a move and leaves state unchanged when another block is in the way', () => {
+  it('blocks a move, leaves blocks/moves unchanged, and costs a life when another block is in the way', () => {
     const level = makeLevel({
       blocks: [
         { id: 'a', row: 0, column: 0, direction: 'RIGHT', color: 'purple', type: 'ARROW' },
@@ -63,7 +63,24 @@ describe('GameEngineService', () => {
 
     expect(result.moved).toBe(false);
     expect(result.blocked).toBe(true);
-    expect(result.state).toBe(state); // unchanged reference — no mutation on a blocked attempt
+    expect(result.state.blocks).toBe(state.blocks); // no mutation of blocks/moves on a blocked attempt
+    expect(result.state.moves).toBe(state.moves);
+    expect(result.state.livesRemaining).toBe(state.livesRemaining - 1); // a wrong tap costs a life
+  });
+
+  it('fails the attempt once a blocked move drains the last life', () => {
+    const level = makeLevel({
+      lives: 1,
+      blocks: [
+        { id: 'a', row: 0, column: 0, direction: 'RIGHT', color: 'purple', type: 'ARROW' },
+        { id: 'blocker', row: 0, column: 1, direction: 'RIGHT', color: 'blue', type: 'ARROW' },
+      ],
+    });
+    const state = engine.initializeLevel(level);
+    const result = engine.moveBlock(state, 'a');
+
+    expect(result.state.livesRemaining).toBe(0);
+    expect(result.state.isFailed).toBe(true);
   });
 
   it('is blocked by an obstacle in the path', () => {

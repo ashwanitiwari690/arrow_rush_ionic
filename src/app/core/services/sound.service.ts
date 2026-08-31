@@ -73,7 +73,7 @@ export class SoundService {
 
     const durationSec = tone.durationMs / 1000;
     gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(0.2, startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.20, startAt + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, startAt + durationSec);
 
     oscillator.connect(gain).connect(ctx.destination);
