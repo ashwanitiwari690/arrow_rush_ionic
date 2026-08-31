@@ -38,7 +38,7 @@ export class GameStateService {
     if (!state) return null;
 
     const result = this.engine.moveBlock(state, blockId);
-    if (result.moved) {
+    if (result.moved || result.blocked) {
       this._state.set(result.state);
     }
     return result;

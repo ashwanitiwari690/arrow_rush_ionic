@@ -4,8 +4,8 @@
       <app-game-header
         [levelId]="lvl.levelId"
         [remainingSeconds]="timer.remainingSeconds()"
-        [lives]="livesCount()"
-        [maxLives]="3"
+        [lives]="gameStateService.state()?.livesRemaining ?? lvl.lives"
+        [maxLives]="lvl.lives"
         (pauseTap)="onPauseTap()"
         (homeTap)="onHomeTap()"
       ></app-game-header>

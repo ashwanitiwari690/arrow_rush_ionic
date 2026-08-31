@@ -23,6 +23,8 @@ import { GameRewardApiService } from '../../../core/services/game-reward-api.ser
 import { environment } from '../../../../environments/environment';
 import { BlockedFeedback } from '../../components/game-board/game-board.component';
 
+const LEVEL_COMPLETE_COINS = 10;
+
 @Component({
   selector: 'app-game-play',
   templateUrl: './game-play.page.html',
@@ -51,7 +53,6 @@ export class GamePlayPage implements OnInit, OnDestroy {
   readonly gameStateService = inject(GameStateService);
   readonly timer = inject(GameTimerService);
   readonly powerUpCounts = this.powerupService.counts;
-  readonly livesCount = this.livesService.count;
 
   readonly level = signal<LevelData | null>(null);
   readonly isPaused = signal(false);
@@ -121,6 +122,9 @@ export class GamePlayPage implements OnInit, OnDestroy {
       this.soundService.play('blocked');
       void this.hapticsService.impact(ImpactStyle.Medium);
       this.blockedFeedback.set({ blockId, ts: Date.now() });
+      if (result.state.livesRemaining <= 0) {
+        this.handleGameOver();
+      }
       return;
     }
 
@@ -154,7 +158,7 @@ export class GamePlayPage implements OnInit, OnDestroy {
     const score = this.gameStateService.finalScore(elapsed, this.powerUpsUsed);
     const stars = await this.scoreService.calculateStars(state.moves, level.blocks.length);
 
-    this.coinsEarned.set(level.reward.coins);
+    this.coinsEarned.set(LEVEL_COMPLETE_COINS);
     this.starsEarned.set(stars);
 
     await this.levelService.completeLevel(level.levelId, score, elapsed, stars, this.totalLevels);
@@ -163,7 +167,7 @@ export class GamePlayPage implements OnInit, OnDestroy {
       gameCode: environment.gameCode,
       levelId: level.levelId,
       score,
-      coins: level.reward.coins,
+      coins: LEVEL_COMPLETE_COINS,
       idempotencyKey: crypto.randomUUID(),
     });
 

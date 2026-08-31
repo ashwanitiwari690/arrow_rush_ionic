@@ -68,38 +68,13 @@
 .logo-mark {
   width: clamp(96px, 26vw, 128px);
   height: clamp(96px, 26vw, 128px);
-  filter: drop-shadow(0 6px 18px rgba(255, 204, 51, 0.35));
+  filter: drop-shadow(0 6px 18px rgba(168, 44, 158, 0.4)) drop-shadow(0 6px 18px rgba(255, 140, 40, 0.3));
 
-  svg {
+  img {
     width: 100%;
     height: 100%;
-  }
-
-  .ring {
-    fill: none;
-    stroke-width: 3.2;
-  }
-  .ring-outer {
-    stroke: var(--ar-gold);
-    opacity: 0.9;
-  }
-  .ring-mid {
-    stroke: #ffffff;
-    opacity: 0.28;
-  }
-  .ring-inner {
-    stroke: var(--ar-gold);
-    opacity: 0.55;
-  }
-  .ring-core {
-    fill: var(--ar-gold);
-  }
-  .arrow {
-    fill: none;
-    stroke: #ffffff;
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    object-fit: contain;
+    border-radius: 22%;
   }
 }
 

@@ -66,7 +66,13 @@ export class GameEngineService {
     const clear = this.validator.canMove(state, blockId);
 
     if (!clear) {
-      return { moved: false, blocked: true, path, escaped: false, state };
+      const livesRemaining = Math.max(0, state.livesRemaining - 1);
+      const blockedState: GameState = {
+        ...state,
+        livesRemaining,
+        isFailed: livesRemaining <= 0,
+      };
+      return { moved: false, blocked: true, path, escaped: false, state: blockedState };
     }
 
     const snapshot = this.snapshot(state);

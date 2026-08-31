@@ -115,8 +115,8 @@ export class MusicService {
       oscillator.frequency.setValueAtTime(frequency, now);
 
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.05, now + attack);
-      gain.gain.setValueAtTime(0.05, now + durationSec - release);
+      gain.gain.exponentialRampToValueAtTime(0.20, now + attack);
+      gain.gain.setValueAtTime(0.20, now + durationSec - release);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
       oscillator.connect(gain).connect(this.masterGain);
