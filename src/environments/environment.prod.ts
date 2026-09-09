@@ -19,6 +19,16 @@ export const environment = {
     interstitialLevelInterval: 3,
   },
 
+  earnivo: {
+    // Confirms Earnivo's "App Promotion" task (see APP_PROMOTION_VERIFICATION_INTEGRATION.md).
+    appVerification: {
+      confirmUrl: 'https://api.earnivo.app/api/app-verification/confirm',
+      // TODO: paste the API key shown for this campaign in the Earnivo agent panel.
+      // Left blank until then — AppVerificationService no-ops without it.
+      apiKey: '',
+    },
+  },
+
   coinConversion: {
     minimumRedeemCoins: 1000,
     coinsPerConversion: 1000,

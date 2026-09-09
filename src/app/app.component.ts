@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
 import { MusicService } from './core/services/music.service';
+import { AppVerificationService } from './core/services/app-verification.service';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,7 @@ export class AppComponent implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly settingsService = inject(SettingsService);
   private readonly musicService = inject(MusicService);
+  private readonly appVerificationService = inject(AppVerificationService);
 
   private audioUnlocked = false;
   private currentUrl = '/home';
@@ -28,6 +30,10 @@ export class AppComponent implements OnInit {
     // previously chosen theme silently reverts to the default on every fresh launch.
     void this.settingsService.init();
     void this.themeService.init();
+
+    // Confirms any pending Earnivo "App Promotion" task for this device. Harmless and
+    // idempotent on every launch — see AppVerificationService for why.
+    void this.appVerificationService.verifyAppPromotion();
 
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
       this.currentUrl = (event as NavigationEnd).urlAfterRedirects;
