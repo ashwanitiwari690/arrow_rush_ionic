@@ -26,6 +26,18 @@ export const environment = {
     interstitialLevelInterval: 3,
   },
 
+  earnivo: {
+    // Confirms Earnivo's "App Promotion" task (see APP_PROMOTION_VERIFICATION_INTEGRATION.md).
+    // This always talks to Earnivo's real API — there is no local/dev stand-in for it,
+    // since verification depends on a task actually started in the real Earnivo app.
+    appVerification: {
+      confirmUrl: 'https://api.earnivo.app/api/app-verification/confirm',
+      // TODO: paste the API key shown for this campaign in the Earnivo agent panel.
+      // Left blank until then — AppVerificationService no-ops without it.
+      apiKey: '',
+    },
+  },
+
   // Placeholder only — the frontend must never compute rupee amounts itself.
   // Real values are owned by the centralized backend once redemption goes live.
   coinConversion: {
