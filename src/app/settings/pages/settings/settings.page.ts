@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { SettingsService, AppLanguage } from '../../../core/services/settings.service';
 
 @Component({
@@ -6,6 +6,7 @@ import { SettingsService, AppLanguage } from '../../../core/services/settings.se
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPage implements OnInit {
   private readonly settingsService = inject(SettingsService);

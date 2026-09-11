@@ -10,6 +10,12 @@ import { environment } from '../../../environments/environment';
  */
 @Injectable({ providedIn: 'root' })
 export class MockAdService extends AdService {
+  private roundsSinceInterstitial = 0;
+
+  async initialize(): Promise<void> {
+    // Nothing to boot for the mock provider.
+  }
+
   async showRewardedAd(): Promise<RewardedAdResult> {
     if (!environment.features.rewardedAdsEnabled) {
       return { granted: false, reason: 'Ads are disabled in this build.' };
@@ -23,6 +29,14 @@ export class MockAdService extends AdService {
   async showInterstitialAd(): Promise<void> {
     if (!environment.features.interstitialAdsEnabled) return;
     await this.delay(400);
+  }
+
+  async maybeShowInterstitialAtBreakpoint(): Promise<void> {
+    if (!environment.features.interstitialAdsEnabled) return;
+    this.roundsSinceInterstitial++;
+    if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) return;
+    this.roundsSinceInterstitial = 0;
+    await this.showInterstitialAd();
   }
 
   async showBanner(): Promise<void> {

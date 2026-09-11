@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -30,6 +30,7 @@ const LEVEL_COMPLETE_COINS = 10;
   templateUrl: './game-play.page.html',
   styleUrls: ['./game-play.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [GameTimerService],
 })
 export class GamePlayPage implements OnInit, OnDestroy {
@@ -57,17 +58,29 @@ export class GamePlayPage implements OnInit, OnDestroy {
   readonly level = signal<LevelData | null>(null);
   readonly isPaused = signal(false);
   readonly isGameOver = signal(false);
+  readonly isOutOfLives = signal(false);
   readonly hintedBlockId = signal<string | null>(null);
   readonly blockedFeedback = signal<BlockedFeedback | null>(null);
   readonly coinsEarned = signal(0);
   readonly starsEarned = signal(0);
+  readonly doubledCoins = signal(false);
+  // Shared across the game-over/level-complete/out-of-lives panels — they're mutually
+  // exclusive, so one flag is enough to guard against double-tapping any of their ad buttons.
   readonly isProcessingAd = signal(false);
+  // Disables the panel exit buttons for the (usually instant, since interstitials preload in
+  // the background) gap while a frequency-capped interstitial is checked/shown, so a slow
+  // load can't be double-tapped into a double navigation.
+  readonly isNavigating = signal(false);
+  readonly adLoadingPowerUp = signal<PowerUpType | null>(null);
+
+  readonly adRewardAvailable = environment.features.rewardedAdsEnabled;
 
   private totalLevels = 100;
   private usedHint = false;
   private powerUpsUsed = 0;
   private rewardSubmitted = false;
   private isDailyChallenge = false;
+  private outOfLivesLevelId: number | null = null;
   private paramSub: Subscription | null = null;
 
   async ngOnInit(): Promise<void> {
@@ -98,13 +111,25 @@ export class GamePlayPage implements OnInit, OnDestroy {
     this.timer.stop();
     this.isPaused.set(false);
     this.isGameOver.set(false);
+    this.isOutOfLives.set(false);
     this.hintedBlockId.set(null);
     this.blockedFeedback.set(null);
     this.coinsEarned.set(0);
     this.starsEarned.set(0);
+    this.doubledCoins.set(false);
     this.usedHint = false;
     this.powerUpsUsed = 0;
     this.rewardSubmitted = false;
+
+    await this.livesService.init();
+    if (!this.livesService.hasLives()) {
+      // Blocks starting (or restarting) a level outright while out of lives, rather than
+      // letting any amount of gameplay run with nothing backing its eventual ad/coin payout.
+      this.level.set(null);
+      this.outOfLivesLevelId = levelId;
+      this.isOutOfLives.set(true);
+      return;
+    }
 
     const level = await this.levelService.getLevel(levelId);
     this.level.set(level);
@@ -206,29 +231,43 @@ export class GamePlayPage implements OnInit, OnDestroy {
     return this.level() !== null && this.level()!.levelId < this.totalLevels;
   }
 
-  onNextLevel(): void {
+  async onNextLevel(): Promise<void> {
     const level = this.level();
-    if (!level) return;
+    if (!level || this.isNavigating()) return;
+    this.isNavigating.set(true);
+    await this.adService.maybeShowInterstitialAtBreakpoint();
     void this.router.navigate(['/game-play', level.levelId + 1]);
+    this.isNavigating.set(false);
   }
 
-  onReplay(): void {
+  async onReplay(): Promise<void> {
     const level = this.level();
-    if (!level) return;
-    void this.loadLevel(level.levelId);
+    if (!level || this.isNavigating()) return;
+    this.isNavigating.set(true);
+    await this.adService.maybeShowInterstitialAtBreakpoint();
+    await this.loadLevel(level.levelId);
+    this.isNavigating.set(false);
   }
 
-  onLevelMap(): void {
+  async onLevelMap(): Promise<void> {
+    if (this.isNavigating()) return;
+    this.isNavigating.set(true);
+    await this.adService.maybeShowInterstitialAtBreakpoint();
     void this.router.navigateByUrl('/level-map');
+    this.isNavigating.set(false);
   }
 
-  onRetry(): void {
+  async onRetry(): Promise<void> {
     const level = this.level();
-    if (!level) return;
-    void this.loadLevel(level.levelId);
+    if (!level || this.isNavigating()) return;
+    this.isNavigating.set(true);
+    await this.adService.maybeShowInterstitialAtBreakpoint();
+    await this.loadLevel(level.levelId);
+    this.isNavigating.set(false);
   }
 
   async onWatchAdAndContinue(): Promise<void> {
+    if (this.isProcessingAd()) return;
     this.isProcessingAd.set(true);
     const result = await this.adService.showRewardedAd();
     this.isProcessingAd.set(false);
@@ -239,8 +278,35 @@ export class GamePlayPage implements OnInit, OnDestroy {
     }
   }
 
-  get adAvailable(): boolean {
-    return environment.features.rewardedAdsEnabled;
+  /** Doubles this level's coin payout. Only ever credited from a confirmed AdMob reward
+   * callback (showRewardedAd resolving granted:true) — never from the button tap itself. */
+  async onWatchAdForDoubleCoins(): Promise<void> {
+    if (this.doubledCoins() || this.isProcessingAd()) return;
+    this.isProcessingAd.set(true);
+    const result = await this.adService.showRewardedAd();
+    this.isProcessingAd.set(false);
+
+    if (result.granted) {
+      const bonus = this.coinsEarned();
+      await this.coinService.addCoins(bonus, 'AD_REWARD', 'level_complete_double', this.level()?.levelId);
+      this.coinsEarned.set(bonus * 2);
+      this.doubledCoins.set(true);
+    }
+  }
+
+  /** Grants +1 life and immediately resumes the level that was blocked on 0 lives. Only
+   * ever granted from a confirmed AdMob reward callback. */
+  async onWatchAdForLife(): Promise<void> {
+    if (this.isProcessingAd()) return;
+    this.isProcessingAd.set(true);
+    const result = await this.adService.showRewardedAd();
+    this.isProcessingAd.set(false);
+
+    if (result.granted) {
+      await this.livesService.grantLife();
+      const levelId = this.outOfLivesLevelId;
+      if (levelId) void this.loadLevel(levelId);
+    }
   }
 
   onPauseTap(): void {
@@ -275,6 +341,29 @@ export class GamePlayPage implements OnInit, OnDestroy {
   async onPowerUp(type: PowerUpType): Promise<void> {
     if (this.isPaused() || this.isGameOver() || this.gameStateService.isComplete()) return;
 
+    if (this.powerUpCounts()[type] <= 0) {
+      await this.watchAdForPowerUp(type);
+      return;
+    }
+
+    await this.usePowerUp(type);
+  }
+
+  /** Offered when a power-up bar button is tapped at 0 count (see PowerUpButtonComponent's
+   * `offersAd`). Grants +1 use only from a confirmed AdMob reward callback, then immediately
+   * spends it — the player's intent in tapping was to use it right now. */
+  private async watchAdForPowerUp(type: PowerUpType): Promise<void> {
+    if (!this.adRewardAvailable || this.adLoadingPowerUp()) return;
+    this.adLoadingPowerUp.set(type);
+    const result = await this.adService.showRewardedAd();
+    this.adLoadingPowerUp.set(null);
+    if (!result.granted) return;
+
+    await this.powerupService.grant(type, 1);
+    await this.usePowerUp(type);
+  }
+
+  private async usePowerUp(type: PowerUpType): Promise<void> {
     switch (type) {
       case 'HINT':
         await this.useHint();

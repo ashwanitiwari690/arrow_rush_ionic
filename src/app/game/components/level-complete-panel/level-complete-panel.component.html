@@ -23,14 +23,32 @@
       </div>
     </div>
 
+    @if (adAvailable) {
+      @if (!coinsDoubled) {
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="warning"
+          class="double-coins-btn"
+          [disabled]="isProcessingAd"
+          (click)="watchAdForDoubleCoins.emit()"
+        >
+          <ion-icon slot="start" name="play-circle"></ion-icon>
+          {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad to 2x Coins' }}
+        </ion-button>
+      } @else {
+        <p class="doubled-note">Coins doubled — nice!</p>
+      }
+    }
+
     <div class="actions">
       @if (hasNextLevel) {
-        <ion-button expand="block" color="primary" (click)="nextLevel.emit()">
+        <ion-button expand="block" color="primary" [disabled]="isProcessingAd" (click)="nextLevel.emit()">
           Next Level
         </ion-button>
       }
-      <ion-button expand="block" fill="outline" (click)="replay.emit()">Replay</ion-button>
-      <ion-button expand="block" fill="clear" (click)="levelMap.emit()">Level Map</ion-button>
+      <ion-button expand="block" fill="outline" [disabled]="isProcessingAd" (click)="replay.emit()">Replay</ion-button>
+      <ion-button expand="block" fill="clear" [disabled]="isProcessingAd" (click)="levelMap.emit()">Level Map</ion-button>
     </div>
   </div>
 </div>

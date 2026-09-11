@@ -1,5 +1,7 @@
 @if (bannerAdsEnabled) {
-  <div class="ad-banner">
-    <span>Advertisement</span>
+  <div class="ad-banner" [class.preview]="!isNative">
+    @if (!isNative) {
+      <span>Advertisement</span>
+    }
   </div>
 }

@@ -7,6 +7,8 @@ import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
 import { MusicService } from './core/services/music.service';
 import { AppVerificationService } from './core/services/app-verification.service';
+import { AdService } from './core/services/ad.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +22,7 @@ export class AppComponent implements OnInit {
   private readonly settingsService = inject(SettingsService);
   private readonly musicService = inject(MusicService);
   private readonly appVerificationService = inject(AppVerificationService);
+  private readonly adService = inject(AdService);
 
   private audioUnlocked = false;
   private currentUrl = '/home';
@@ -34,6 +37,12 @@ export class AppComponent implements OnInit {
     // Confirms any pending Earnivo "App Promotion" task for this device. Harmless and
     // idempotent on every launch — see AppVerificationService for why.
     void this.appVerificationService.verifyAppPromotion();
+
+    // Boots the ad SDK and starts preloading interstitial/rewarded ads as early as
+    // possible, so they're already loaded by the time a screen wants to show one.
+    if (environment.features.adsEnabled) {
+      void this.adService.initialize();
+    }
 
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
       this.currentUrl = (event as NavigationEnd).urlAfterRedirects;

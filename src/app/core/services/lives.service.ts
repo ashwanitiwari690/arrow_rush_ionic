@@ -62,6 +62,17 @@ export class LivesService {
     await this.storage.set(LIVES_KEY, record);
   }
 
+  /** Grants +1 life, capped at maxLives. Call only after a rewarded ad's completion is
+   * confirmed — never speculatively (e.g. from the "watch ad for a life" button tap itself). */
+  async grantLife(): Promise<void> {
+    await this.init();
+    const nextCount = Math.min(this.maxLives, this._count() + 1);
+    this._count.set(nextCount);
+    const record: LivesRecord = { count: nextCount, lastRegenAt: Date.now() };
+    this._nextRegenAt.set(nextCount < this.maxLives ? record.lastRegenAt + this.regenMs : null);
+    await this.storage.set(LIVES_KEY, record);
+  }
+
   private applyRegen(record: LivesRecord): void {
     let { count, lastRegenAt } = record;
 

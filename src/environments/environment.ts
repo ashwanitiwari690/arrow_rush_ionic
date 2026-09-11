@@ -12,12 +12,13 @@ export const environment = {
   // gameplay/coins stay fully local; only the /redeem call below actually reaches it.
   apiBaseUrl: 'http://localhost:4227/api/game-rewards',
 
-  // Master switches; all default off until the corresponding phase is built and verified.
+  // Master switches. Ad formats are wired up via AdMobService (see admob.config.ts for the
+  // ad unit IDs — currently Google's public test IDs, safe to ship during development).
   features: {
-    adsEnabled: false,
-    rewardedAdsEnabled: false,
-    interstitialAdsEnabled: false,
-    bannerAdsEnabled: false,
+    adsEnabled: true,
+    rewardedAdsEnabled: true,
+    interstitialAdsEnabled: true,
+    bannerAdsEnabled: true,
     redemptionEnabled: true,
   },
 

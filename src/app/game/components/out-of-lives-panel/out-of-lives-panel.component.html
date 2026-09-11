@@ -1,0 +1,21 @@
+<div class="overlay">
+  <div class="panel">
+    <ion-icon name="heart-dislike" class="lives-icon"></ion-icon>
+    <h1>OUT OF LIVES</h1>
+    <p>Lives regenerate over time, or watch a short ad for an instant extra life.</p>
+
+    <div class="actions">
+      @if (adAvailable) {
+        <ion-button
+          expand="block"
+          color="primary"
+          [disabled]="isProcessingAd"
+          (click)="watchAdForLife.emit()"
+        >
+          {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad for +1 Life' }}
+        </ion-button>
+      }
+      <ion-button expand="block" fill="clear" (click)="levelMap.emit()">Level Map</ion-button>
+    </div>
+  </div>
+</div>

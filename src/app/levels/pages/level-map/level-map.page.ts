@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Difficulty, LevelSummary } from '../../../core/models/game.models';
 import { LevelService } from '../../../core/services/level.service';
@@ -35,6 +35,7 @@ const ZONE_STYLES: Record<Difficulty, ZoneStyle> = {
   templateUrl: './level-map.page.html',
   styleUrls: ['./level-map.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LevelMapPage implements OnInit, AfterViewInit {
   private readonly router = inject(Router);

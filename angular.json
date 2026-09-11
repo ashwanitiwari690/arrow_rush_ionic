@@ -29,7 +29,7 @@
                 "output": "assets"
               },
               {
-                "glob": "**/*.svg",
+                "glob": "{arrow-back,arrow-back-sharp,arrow-down,arrow-forward,arrow-undo,arrow-up,bulb,calendar,caret-back-sharp,caret-down-sharp,caret-up-sharp,checkmark-circle,checkmark-outline,chevron-back,chevron-down,chevron-expand,chevron-forward,chevron-forward-outline,close,close-circle,close-sharp,color-palette,document-text-outline,ellipse-outline,ellipsis-horizontal,eye,eye-off,flame,flash,grid,heart,heart-dislike,heart-outline,home,hourglass,information-circle-outline,language-outline,leaf,lock-closed,menu-outline,menu-sharp,musical-notes-outline,notifications-outline,pause,person,phone-portrait-outline,planet,play,play-circle,remove-outline,reorder-three-outline,reorder-two-sharp,ribbon,search-outline,search-sharp,settings-outline,shield-checkmark-outline,shuffle,snow,star,star-outline,storefront,sunny,thunderstorm,time-outline,timer,trophy,volume-high-outline}.svg",
                 "input": "node_modules/ionicons/dist/ionicons/svg",
                 "output": "./svg"
               }

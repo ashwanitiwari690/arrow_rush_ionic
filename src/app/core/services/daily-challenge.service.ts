@@ -46,6 +46,7 @@ export class DailyChallengeService {
       maxAttempts: MAX_ATTEMPTS,
       completed: false,
       rewardClaimed: false,
+      bonusClaimed: false,
     };
 
     this._status.set(fresh);
@@ -75,6 +76,22 @@ export class DailyChallengeService {
     await this.coins.addCoins(rewardConfig.dailyChallengeReward.coins, 'DAILY_CHALLENGE', 'daily_challenge');
 
     const next: DailyChallengeStatus = { ...status, rewardClaimed: true };
+    this._status.set(next);
+    await this.storage.set(DAILY_KEY, next);
+    return true;
+  }
+
+  /** Grants a second, equal payout on top of the already-claimed daily reward. Call only
+   * after a rewarded ad's completion is confirmed — never speculatively. Capped at once per
+   * day via `bonusClaimed`. */
+  async claimAdBonus(): Promise<boolean> {
+    const status = this._status();
+    if (!status || !status.rewardClaimed || status.bonusClaimed) return false;
+
+    const rewardConfig = await this.config.getRewardConfig();
+    await this.coins.addCoins(rewardConfig.dailyChallengeReward.coins, 'AD_REWARD', 'daily_challenge_bonus');
+
+    const next: DailyChallengeStatus = { ...status, bonusClaimed: true };
     this._status.set(next);
     await this.storage.set(DAILY_KEY, next);
     return true;

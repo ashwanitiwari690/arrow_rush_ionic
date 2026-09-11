@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ThemeDefinition } from '../../../core/services/config.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { CoinService } from '../../../core/services/coin.service';
@@ -8,6 +8,7 @@ import { CoinService } from '../../../core/services/coin.service';
   templateUrl: './themes.page.html',
   styleUrls: ['./themes.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThemesPage implements OnInit {
   private readonly themeService = inject(ThemeService);

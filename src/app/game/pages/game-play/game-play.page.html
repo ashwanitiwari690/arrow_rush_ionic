@@ -27,6 +27,8 @@
           label="Hint"
           accent="hint"
           [count]="powerUpCounts().HINT"
+          [adAvailable]="adRewardAvailable"
+          [isLoadingAd]="adLoadingPowerUp() === 'HINT'"
           (activate)="onPowerUp('HINT')"
         ></app-power-up-button>
         <app-power-up-button
@@ -34,6 +36,8 @@
           label="Undo"
           accent="undo"
           [count]="powerUpCounts().UNDO"
+          [adAvailable]="adRewardAvailable"
+          [isLoadingAd]="adLoadingPowerUp() === 'UNDO'"
           (activate)="onPowerUp('UNDO')"
         ></app-power-up-button>
         <app-power-up-button
@@ -41,6 +45,8 @@
           label="Shuffle"
           accent="shuffle"
           [count]="powerUpCounts().SHUFFLE"
+          [adAvailable]="adRewardAvailable"
+          [isLoadingAd]="adLoadingPowerUp() === 'SHUFFLE'"
           (activate)="onPowerUp('SHUFFLE')"
         ></app-power-up-button>
         <app-power-up-button
@@ -48,6 +54,8 @@
           label="Extra"
           accent="extra"
           [count]="powerUpCounts().EXTRA"
+          [adAvailable]="adRewardAvailable"
+          [isLoadingAd]="adLoadingPowerUp() === 'EXTRA'"
           (activate)="onPowerUp('EXTRA')"
         ></app-power-up-button>
       </div>
@@ -70,19 +78,32 @@
       [timeSeconds]="timer.elapsedSeconds()"
       [stars]="starsEarned()"
       [hasNextLevel]="hasNextLevel"
+      [adAvailable]="adRewardAvailable"
+      [isProcessingAd]="isProcessingAd() || isNavigating()"
+      [coinsDoubled]="doubledCoins()"
       (nextLevel)="onNextLevel()"
       (replay)="onReplay()"
       (levelMap)="onLevelMap()"
+      (watchAdForDoubleCoins)="onWatchAdForDoubleCoins()"
     ></app-level-complete-panel>
   }
 
   @if (isGameOver()) {
     <app-game-over-panel
-      [adAvailable]="adAvailable"
-      [isProcessingAd]="isProcessingAd()"
+      [adAvailable]="adRewardAvailable"
+      [isProcessingAd]="isProcessingAd() || isNavigating()"
       (retry)="onRetry()"
       (watchAdAndContinue)="onWatchAdAndContinue()"
       (levelMap)="onLevelMap()"
     ></app-game-over-panel>
+  }
+
+  @if (isOutOfLives()) {
+    <app-out-of-lives-panel
+      [adAvailable]="adRewardAvailable"
+      [isProcessingAd]="isProcessingAd()"
+      (watchAdForLife)="onWatchAdForLife()"
+      (levelMap)="onLevelMap()"
+    ></app-out-of-lives-panel>
   }
 </ion-content>
