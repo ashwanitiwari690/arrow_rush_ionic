@@ -13,10 +13,14 @@ export class LevelCompletePanelComponent {
   @Input() timeSeconds = 0;
   @Input() stars = 0;
   @Input() hasNextLevel = true;
+  @Input() adAvailable = false;
+  @Input() isProcessingAd = false;
+  @Input() coinsDoubled = false;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() replay = new EventEmitter<void>();
   @Output() levelMap = new EventEmitter<void>();
+  @Output() watchAdForDoubleCoins = new EventEmitter<void>();
 
   get formattedTime(): string {
     const minutes = Math.floor(this.timeSeconds / 60);

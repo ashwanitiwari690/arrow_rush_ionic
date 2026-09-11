@@ -1,0 +1,50 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 15, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 320px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ion-color-danger);
+  border-radius: 22px;
+  padding: 28px 24px;
+  text-align: center;
+
+  .lives-icon {
+    font-size: 40px;
+    color: var(--ion-color-danger);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    color: var(--ar-text);
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  p {
+    color: var(--ar-text-dim);
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  ion-button {
+    margin: 0;
+    --border-radius: 12px;
+  }
+}

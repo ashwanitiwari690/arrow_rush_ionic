@@ -4,7 +4,8 @@ export type CoinTransactionType =
   | 'THEME_PURCHASE'
   | 'POWERUP_PURCHASE'
   | 'ACHIEVEMENT'
-  | 'REDEMPTION';
+  | 'REDEMPTION'
+  | 'AD_REWARD';
 
 export type CoinTransactionStatus = 'PENDING' | 'CONFIRMED' | 'FAILED';
 
@@ -43,6 +44,9 @@ export interface DailyChallengeStatus {
   maxAttempts: number;
   completed: boolean;
   rewardClaimed: boolean;
+  /** Whether the player already watched a rewarded ad to double today's claimed reward —
+   * caps the bonus at once per day, resetting naturally along with the rest of the record. */
+  bonusClaimed: boolean;
 }
 
 export interface RedeemRequest {

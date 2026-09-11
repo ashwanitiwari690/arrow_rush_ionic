@@ -1,11 +1,18 @@
 .ad-banner {
+  // Reserves the same footprint the real bottom-pinned native banner occupies, so page
+  // content doesn't sit underneath it. Native (Android) shows nothing here — the actual ad
+  // is a separate native view AdMobService overlays on the screen.
   height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ar-surface);
-  border: 1px dashed var(--ar-border);
-  border-radius: 8px;
-  color: var(--ar-text-dim);
-  font-size: 12px;
+  margin-top: 12px;
+
+  &.preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ar-surface);
+    border: 1px dashed var(--ar-border);
+    border-radius: 8px;
+    color: var(--ar-text-dim);
+    font-size: 12px;
+  }
 }

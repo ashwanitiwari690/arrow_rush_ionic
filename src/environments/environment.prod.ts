@@ -7,11 +7,13 @@ export const environment = {
   // placeholder only, matching the same not-yet-live URL other games in this family use.
   apiBaseUrl: 'https://api.earnivo.app/api/game-rewards',
 
+  // Ad formats are wired up via AdMobService (see admob.config.ts for the ad unit IDs —
+  // currently Google's public test IDs; swap them for real ones before a public release).
   features: {
-    adsEnabled: false,
-    rewardedAdsEnabled: false,
-    interstitialAdsEnabled: false,
-    bannerAdsEnabled: false,
+    adsEnabled: true,
+    rewardedAdsEnabled: true,
+    interstitialAdsEnabled: true,
+    bannerAdsEnabled: true,
     redemptionEnabled: true,
   },
 

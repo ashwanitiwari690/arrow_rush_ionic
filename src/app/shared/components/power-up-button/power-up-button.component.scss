@@ -73,6 +73,18 @@
     box-shadow: 0 0 10px rgba(255, 204, 51, 0.5);
   }
 
+  &.offers-ad {
+    .badge {
+      background: linear-gradient(160deg, #86efac, #16a34a);
+    }
+
+    .ad-hint {
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 9px;
+    }
+  }
+
   &:active:not(:disabled) .badge {
     transform: scale(0.92);
   }

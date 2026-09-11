@@ -3,13 +3,18 @@
   class="power-up-button"
   [class]="'accent-' + accent"
   [class.active]="active"
+  [class.offers-ad]="offersAd"
   [disabled]="isDisabled"
   (click)="activate.emit()"
-  [attr.aria-label]="label + ', ' + count + ' remaining'"
+  [attr.aria-label]="offersAd ? ('Watch ad for a free ' + label) : (label + ', ' + count + ' remaining')"
 >
   <span class="badge">
-    <ion-icon [name]="icon"></ion-icon>
+    <ion-icon [name]="isLoadingAd ? 'hourglass' : (offersAd ? 'play-circle' : icon)"></ion-icon>
   </span>
   <span class="label">{{ label }}</span>
-  <span class="count">{{ count }}</span>
+  @if (offersAd) {
+    <span class="count ad-hint">AD</span>
+  } @else {
+    <span class="count">{{ count }}</span>
+  }
 </button>

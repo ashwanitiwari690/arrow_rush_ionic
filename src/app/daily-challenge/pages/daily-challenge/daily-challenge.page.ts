@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { ConfigService, RewardConfig } from '../../../core/services/config.service';
+import { AdService } from '../../../core/services/ad.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-daily-challenge',
@@ -15,11 +17,15 @@ export class DailyChallengePage implements OnInit {
   private readonly dailyChallengeService = inject(DailyChallengeService);
   private readonly coinService = inject(CoinService);
   private readonly config = inject(ConfigService);
+  private readonly adService = inject(AdService);
 
   readonly status = this.dailyChallengeService.status;
   readonly balance = this.coinService.balance;
   reward: RewardConfig['dailyChallengeReward'] = { coins: 0, score: 0 };
   isClaiming = false;
+
+  readonly adRewardAvailable = environment.features.rewardedAdsEnabled;
+  readonly isWatchingAd = signal(false);
 
   async ngOnInit(): Promise<void> {
     await this.coinService.init();
@@ -44,5 +50,19 @@ export class DailyChallengePage implements OnInit {
 
   get attemptsRemaining(): number {
     return this.dailyChallengeService.attemptsRemaining();
+  }
+
+  async onWatchAdToDouble(): Promise<void> {
+    if (this.isWatchingAd()) return; // prevent double-tap / overlapping ad requests
+    this.isWatchingAd.set(true);
+
+    try {
+      const result = await this.adService.showRewardedAd();
+      if (result.granted) {
+        await this.dailyChallengeService.claimAdBonus();
+      }
+    } finally {
+      this.isWatchingAd.set(false);
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CoinService } from '../core/services/coin.service';
 import { LevelService } from '../core/services/level.service';
@@ -10,6 +10,7 @@ import { ConfigService } from '../core/services/config.service';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage implements OnInit {
   private readonly router = inject(Router);

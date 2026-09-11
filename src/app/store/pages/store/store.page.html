@@ -11,7 +11,27 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="store-content">
-  <app-ad-banner></app-ad-banner>
+  @if (adRewardAvailable) {
+    <div class="ad-reward-card">
+      <ion-icon name="play-circle" class="ad-reward-icon"></ion-icon>
+      <div class="ad-reward-info">
+        <span class="ad-reward-title">Free Coins</span>
+        <span class="ad-reward-desc">Watch a short ad to earn coins — no cost, no catch.</span>
+      </div>
+      <ion-button
+        size="small"
+        color="primary"
+        [disabled]="isWatchingAd()"
+        (click)="onWatchAdForCoins()"
+      >
+        <app-coin-icon slot="start"></app-coin-icon>
+        {{ isWatchingAd() ? 'Loading…' : '+' + watchAdCoins() }}
+      </ion-button>
+    </div>
+    @if (adFailedMessage()) {
+      <p class="error ad-error">{{ adFailedMessage() }}</p>
+    }
+  }
 
   <h2 class="section-title">Power-Ups</h2>
   <div class="power-up-grid">
@@ -46,4 +66,6 @@
 
   <h2 class="section-title">Cosmetics</h2>
   <p class="empty-state">More cosmetics are coming soon.</p>
+
+  <app-ad-banner></app-ad-banner>
 </ion-content>

@@ -15,6 +15,7 @@
     "coins": 50,
     "score": 1000
   },
+  "watchAdRewardCoins": 15,
   "achievementRewards": {
     "FIRST_WIN": 20,
     "LEVELS_10": 50,

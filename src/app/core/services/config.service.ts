@@ -8,6 +8,9 @@ interface RewardConfig {
   starThresholds: { threeStarMoveRatio: number; twoStarMoveRatio: number };
   dailyChallengeReward: { coins: number; score: number };
   achievementRewards: Record<string, number>;
+  /** Coins granted for a single confirmed rewarded-ad watch (e.g. Store "Watch Ad for Coins",
+   * or doubling a reward elsewhere). Config-driven so it's never hardcoded next to ad logic. */
+  watchAdRewardCoins: number;
 }
 
 interface PowerUpConfig {

@@ -70,6 +70,20 @@
   }
 }
 
+.double-coins-btn {
+  margin: 0 0 14px;
+  --border-radius: 12px;
+  --border-color: var(--ar-gold);
+  --color: var(--ar-gold);
+}
+
+.doubled-note {
+  color: var(--ar-gold);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

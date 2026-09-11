@@ -15,9 +15,22 @@ export class PowerUpButtonComponent {
   @Input({ required: true }) accent!: PowerUpAccent;
   @Input() count = 0;
   @Input() active = false;
+  /** When true, tapping this button at count 0 offers a rewarded ad for +1 use instead of
+   * being disabled outright — see GamePlayPage.onPowerUp(). */
+  @Input() adAvailable = false;
+  @Input() isLoadingAd = false;
   @Output() activate = new EventEmitter<void>();
 
-  get isDisabled(): boolean {
+  get isEmpty(): boolean {
     return this.count <= 0;
+  }
+
+  get isDisabled(): boolean {
+    if (this.isLoadingAd) return true;
+    return this.isEmpty && !this.adAvailable;
+  }
+
+  get offersAd(): boolean {
+    return this.isEmpty && this.adAvailable;
   }
 }
