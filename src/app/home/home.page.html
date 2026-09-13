@@ -1,7 +1,16 @@
 <ion-content [fullscreen]="true" class="home-content">
   <div class="home-layout">
     <div class="top-bar">
-      <app-coin-balance></app-coin-balance>
+      <div class="top-bar-stats">
+        <app-coin-balance></app-coin-balance>
+        <div class="lives-chip" role="status" aria-label="Lives remaining">
+          <ion-icon name="heart" [class.empty]="livesCount() <= 0"></ion-icon>
+          <span>{{ livesCount() }}</span>
+          @if (livesRegenText(); as regenText) {
+            <span class="regen">{{ regenText }}</span>
+          }
+        </div>
+      </div>
       <button type="button" class="icon-btn" (click)="onSettings()" aria-label="Settings">
         <ion-icon name="settings-outline"></ion-icon>
       </button>
@@ -16,26 +25,54 @@
       <p class="tagline">ESCAPE THE BLOCKS!</p>
     </div>
 
+    <button type="button" class="progress-card" (click)="onProfile()">
+      <div class="progress-top">
+        <div class="progress-info">
+          <span class="greeting">{{ greeting }}</span>
+          <span class="level-label">Level {{ nextLevelId() }} <span class="of">/ {{ totalLevels }}</span></span>
+        </div>
+        <div class="progress-stats">
+          <div class="stat">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>{{ completedCount() }}</span>
+          </div>
+          <div class="stat">
+            <ion-icon name="star"></ion-icon>
+            <span>{{ totalStars() }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+      </div>
+    </button>
+
     <div class="menu">
       <ion-button expand="block" color="primary" class="primary-cta" (click)="onPlay()">
         <ion-icon slot="start" name="play"></ion-icon>
-        PLAY
+        <span class="cta-text">
+          <span class="cta-title">PLAY</span>
+          <span class="cta-sub">Level {{ nextLevelId() }}</span>
+        </span>
       </ion-button>
 
       <div class="menu-grid">
-        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onDailyChallenge()">
+        <ion-button expand="block" fill="outline" class="menu-btn daily-btn" (click)="onDailyChallenge()">
+          @if (dailyRewardReady()) {
+            <span class="badge-dot" aria-hidden="true"></span>
+          }
           <ion-icon slot="start" name="calendar"></ion-icon>
           DAILY
         </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onLevels()">
+        <ion-button expand="block" fill="outline" class="menu-btn levels-btn" (click)="onLevels()">
           <ion-icon slot="start" name="grid"></ion-icon>
           LEVELS
         </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onStore()">
+        <ion-button expand="block" fill="outline" class="menu-btn store-btn" (click)="onStore()">
           <ion-icon slot="start" name="storefront"></ion-icon>
           STORE
         </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn" (click)="onProfile()">
+        <ion-button expand="block" fill="outline" class="menu-btn profile-btn" (click)="onProfile()">
           <ion-icon slot="start" name="person"></ion-icon>
           PROFILE
         </ion-button>

@@ -14,13 +14,50 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   position: relative;
   z-index: 1;
+}
+
+.top-bar-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lives-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  color: var(--ar-text);
+  font-weight: 700;
+  font-size: clamp(13px, 3.4vw, 16px);
+
+  ion-icon {
+    font-size: 1.2em;
+    color: var(--ion-color-danger);
+
+    &.empty {
+      color: var(--ar-text-dim);
+    }
+  }
+
+  .regen {
+    color: var(--ar-text-dim);
+    font-weight: 600;
+    font-size: 0.75em;
+  }
 }
 
 .icon-btn {
   width: 42px;
   height: 42px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--ar-surface);
   border: 1px solid var(--ar-border);
@@ -42,6 +79,7 @@
   justify-content: center;
   text-align: center;
   gap: 6px;
+  padding-bottom: 12px;
   position: relative;
   z-index: 1;
 
@@ -78,10 +116,96 @@
   }
 }
 
+.progress-card {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+
+  .progress-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .greeting {
+    color: var(--ar-text-dim);
+    font-size: clamp(11px, 3vw, 13px);
+    font-weight: 600;
+  }
+
+  .level-label {
+    color: var(--ar-text);
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 800;
+
+    .of {
+      color: var(--ar-text-dim);
+      font-weight: 600;
+    }
+  }
+
+  .progress-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ar-text);
+    font-weight: 800;
+    font-size: 14px;
+
+    ion-icon {
+      font-size: 16px;
+      color: var(--ar-gold);
+    }
+  }
+
+  .progress-track {
+    margin-top: 10px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--ar-border);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--ar-gold), #ffe17a);
+    transition: width 0.3s ease;
+  }
+}
+
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   position: relative;
   z-index: 1;
 
@@ -97,17 +221,85 @@
     --background: linear-gradient(180deg, #ffe17a, var(--ar-gold) 70%);
     --color: #1a1300;
     --box-shadow: 0 8px 20px rgba(255, 204, 51, 0.4);
+
+    .cta-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.15;
+    }
+
+    .cta-title {
+      font-size: 1em;
+    }
+
+    .cta-sub {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      opacity: 0.75;
+    }
   }
 
   .menu-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 14px;
   }
 
   .menu-btn {
+    position: relative;
+    --border-width: 1.5px;
     --border-color: var(--ar-border);
-    --background: var(--ar-surface);
+    --background: var(--ar-surface-2);
     --color: var(--ar-text);
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    ion-icon {
+      color: var(--menu-btn-accent, var(--ar-text));
+    }
+  }
+
+  // Each menu button borrows one of the game's existing arrow-identity colors so the
+  // grid reads as distinct destinations rather than four identical dark rectangles — a
+  // translucent wash of the accent over the dark card, plus a glowing tinted border.
+  .daily-btn {
+    --menu-btn-accent: var(--ar-arrow-yellow);
+    --background: rgba(251, 191, 36, 0.08);
+    --border-color: rgba(251, 191, 36, 0.4);
+    --box-shadow: 0 4px 12px rgba(251, 191, 36, 0.12);
+  }
+
+  .levels-btn {
+    --menu-btn-accent: var(--ar-arrow-blue);
+    --background: rgba(59, 130, 246, 0.08);
+    --border-color: rgba(59, 130, 246, 0.4);
+    --box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+  }
+
+  .store-btn {
+    --menu-btn-accent: var(--ar-arrow-green);
+    --background: rgba(34, 197, 94, 0.08);
+    --border-color: rgba(34, 197, 94, 0.4);
+    --box-shadow: 0 4px 12px rgba(34, 197, 94, 0.12);
+  }
+
+  .profile-btn {
+    --menu-btn-accent: var(--ar-arrow-purple);
+    --background: rgba(168, 85, 247, 0.08);
+    --border-color: rgba(168, 85, 247, 0.4);
+    --box-shadow: 0 4px 12px rgba(168, 85, 247, 0.12);
+  }
+
+  .badge-dot {
+    position: absolute;
+    top: 6px;
+    right: 14px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ion-color-danger);
+    box-shadow: 0 0 0 2px var(--ar-surface);
+    z-index: 2;
   }
 }
