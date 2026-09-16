@@ -32,10 +32,10 @@ export const environment = {
     // This always talks to Earnivo's real API — there is no local/dev stand-in for it,
     // since verification depends on a task actually started in the real Earnivo app.
     appVerification: {
-      confirmUrl: 'https://api.earnivo.app/api/app-verification/confirm',
+      confirmUrl: 'https://api.admobility.in/api/app-verification/confirm',
       // TODO: paste the API key shown for this campaign in the Earnivo agent panel.
       // Left blank until then — AppVerificationService no-ops without it.
-      apiKey: '',
+      apiKey: 'ak_57c63e535cdd10dd30bea0c295275b37809006a867be7445',
     },
   },
 
