@@ -10,7 +10,7 @@ export const environment = {
 
   // Same shared Central Game Reward API other games in this family (e.g. Brain Rush) call —
   // gameplay/coins stay fully local; only the /redeem call below actually reaches it.
-  apiBaseUrl: 'http://localhost:4227/api/game-rewards',
+  apiBaseUrl: 'https://api.admobility.in/api/game-rewards',
 
   // Master switches. Ad formats are wired up via AdMobService (see admob.config.ts for the
   // ad unit IDs — currently Google's public test IDs, safe to ship during development).
