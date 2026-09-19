@@ -144,6 +144,45 @@ describe('LocalGameRewardApiService — redeemCoins HTTP integration', () => {
     await expect(promise).rejects.toMatchObject({ errorCode: 'DUPLICATE_CONVERSION' });
   });
 
+  it('surfaces backend validation error even when returned with HTTP 200 OK', async () => {
+    const promise = service.redeemCoins(payload);
+
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/redeem`);
+    req.flush({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'No Earnivo account found with this mobile number. Please register in the Earnivo app first.',
+      },
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      errorCode: 'VALIDATION_ERROR',
+      message: 'No Earnivo account found with this mobile number. Please register in the Earnivo app first.',
+    });
+  });
+
+  it('surfaces backend validation error when returned with HTTP 400 Bad Request', async () => {
+    const promise = service.redeemCoins(payload);
+
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/redeem`);
+    req.flush(
+      {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'No Earnivo account found with this mobile number. Please register in the Earnivo app first.',
+        },
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
+
+    await expect(promise).rejects.toMatchObject({
+      errorCode: 'VALIDATION_ERROR',
+      message: 'No Earnivo account found with this mobile number. Please register in the Earnivo app first.',
+    });
+  });
+
   it('normalizes a network failure to a friendly, retryable error', async () => {
     const promise = service.redeemCoins(payload);
 

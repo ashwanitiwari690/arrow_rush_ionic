@@ -75,19 +75,53 @@ export class LocalGameRewardApiService extends GameRewardApiService {
 
     try {
       const envelope = await firstValueFrom(
-        this.http.post<ApiSuccessEnvelope<RedeemResponse>>(`${environment.apiBaseUrl}/redeem`, payload),
+        this.http.post<any>(`${environment.apiBaseUrl}/redeem`, payload),
       );
+
+      if (envelope && (envelope.success === false || envelope.error)) {
+        const errObj = envelope.error;
+        const msg =
+          typeof errObj === 'string'
+            ? errObj
+            : errObj?.message || envelope.message || 'Redemption failed.';
+        const code = errObj?.code || envelope.code || 'VALIDATION_ERROR';
+        throw new RedeemApiError(msg, code);
+      }
+
+      if (!envelope?.data) {
+        throw new RedeemApiError('Invalid response from reward server.', 'INVALID_RESPONSE');
+      }
+
       return envelope.data;
     } catch (err) {
+      if (err instanceof RedeemApiError) {
+        throw err;
+      }
       throw this.normalizeError(err);
     }
   }
 
   private normalizeError(err: unknown): RedeemApiError {
     if (err instanceof HttpErrorResponse) {
-      const body = err.error as Partial<RedeemApiErrorEnvelope> | null;
-      if (body?.error?.code) {
-        return new RedeemApiError(body.error.message || body.error.code, body.error.code);
+      let body: any = err.error;
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          // not JSON string
+        }
+      }
+
+      const message =
+        body?.error?.message ||
+        (typeof body?.error === 'string' ? body.error : null) ||
+        body?.message ||
+        (typeof body === 'string' && body.length > 0 && body.length < 250 ? body : null);
+
+      const code = body?.error?.code || body?.code || 'API_ERROR';
+
+      if (message) {
+        return new RedeemApiError(message, code);
       }
       if (err.status === 0) {
         return new RedeemApiError(
@@ -96,7 +130,10 @@ export class LocalGameRewardApiService extends GameRewardApiService {
         );
       }
     }
-    return new RedeemApiError('Something went wrong. Please try again.', 'UNKNOWN_ERROR');
+    return new RedeemApiError(
+      err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      'UNKNOWN_ERROR',
+    );
   }
 
   private async ensureLoaded(): Promise<void> {
