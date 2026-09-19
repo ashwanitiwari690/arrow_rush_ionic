@@ -115,4 +115,19 @@ export class LevelService {
   completedCount(): number {
     return Object.values(this._progress()).filter((p) => p.completed).length;
   }
+
+  async resetProgress(): Promise<void> {
+    const initialProgress: Record<number, LevelProgress> = {
+      1: {
+        levelId: 1,
+        completed: false,
+        unlocked: true,
+        stars: 0,
+        bestScore: 0,
+        bestTimeSeconds: null,
+      },
+    };
+    this._progress.set(initialProgress);
+    await this.storage.set(PROGRESS_KEY, initialProgress);
+  }
 }

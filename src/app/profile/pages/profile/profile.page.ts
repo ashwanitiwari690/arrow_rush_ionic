@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { CoinService } from '../../../core/services/coin.service';
 import { LevelService } from '../../../core/services/level.service';
 import { ScoreService } from '../../../core/services/score.service';
@@ -33,6 +33,7 @@ export class ProfilePage implements OnInit {
   private readonly config = inject(ConfigService);
   private readonly rewardApi = inject(GameRewardApiService);
   private readonly storage = inject(StorageService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly balance = this.coinService.balance;
   readonly achievements = this.achievementService.achievements;
@@ -40,11 +41,12 @@ export class ProfilePage implements OnInit {
   readonly redemptionEnabled = environment.features.redemptionEnabled;
   readonly minimumRedeemCoins = environment.coinConversion.minimumRedeemCoins;
 
-  totalLevels = 100;
-  withdrawNumber = '';
-  redeemState: RedeemState = 'idle';
-  redeemMessage: string | null = null;
-  redeemedRupees: string | null = null;
+  readonly withdrawNumber = signal('');
+  readonly redeemState = signal<RedeemState>('idle');
+  readonly redeemMessage = signal<string | null>(null);
+  readonly redeemedRupees = signal<string | null>(null);
+
+  totalLevels = 520;
 
   // Tracks a (coins, mobileNumber) pair the backend already reported as processed, so we
   // don't let the user hammer the same submission again until something actually changes.
@@ -73,7 +75,7 @@ export class ProfilePage implements OnInit {
   }
 
   get isRedeeming(): boolean {
-    return this.redeemState === 'loading';
+    return this.redeemState() === 'loading';
   }
 
   /** Gates the entire withdraw form, not just the submit button — the input box itself
@@ -87,14 +89,14 @@ export class ProfilePage implements OnInit {
   }
 
   get withdrawNumberValid(): boolean {
-    return /^\d{10}$/.test(this.withdrawNumber);
+    return /^\d{10}$/.test(this.withdrawNumber());
   }
 
   get isBlockedByDuplicate(): boolean {
     return (
       this.duplicateSnapshot !== null &&
       this.duplicateSnapshot.coins === this.balance() &&
-      this.duplicateSnapshot.mobileNumber === this.withdrawNumber
+      this.duplicateSnapshot.mobileNumber === this.withdrawNumber()
     );
   }
 
@@ -102,7 +104,7 @@ export class ProfilePage implements OnInit {
    * already-invalid value — matches how a phone-number field should feel to type into. */
   onWithdrawNumberInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.withdrawNumber = input.value.replace(/\D/g, '').slice(0, 10);
+    this.withdrawNumber.set(input.value.replace(/\D/g, '').slice(0, 10));
   }
 
   async onWithdraw(): Promise<void> {
@@ -110,16 +112,18 @@ export class ProfilePage implements OnInit {
       return;
     }
 
-    this.redeemState = 'loading';
-    this.redeemMessage = null;
+    this.redeemState.set('loading');
+    this.redeemMessage.set(null);
+    this.cdr.markForCheck();
 
     const coins = this.balance();
-    const idempotencyKey = await this.getOrCreateIdempotencyKey(coins, this.withdrawNumber);
+    const mobile = this.withdrawNumber();
+    const idempotencyKey = await this.getOrCreateIdempotencyKey(coins, mobile);
 
     try {
       const response = await this.rewardApi.redeemCoins({
         gameCode: environment.gameCode,
-        mobileNumber: this.withdrawNumber,
+        mobileNumber: mobile,
         coins,
         idempotencyKey,
       });
@@ -128,30 +132,37 @@ export class ProfilePage implements OnInit {
       // coins were never touched locally before this point, so a failure above is a
       // safe, retryable state with nothing to roll back.
       await this.coinService.confirmRedemption(response.coinsRedeemed);
-      this.redeemedRupees = response.amountCredited;
-      this.redeemState = 'success';
+      this.redeemedRupees.set(response.amountCredited);
+      this.redeemState.set('success');
       await this.storage.remove(IDEMPOTENCY_KEY_STORAGE);
+      this.cdr.markForCheck();
     } catch (err) {
       this.handleRedeemFailure(err, coins);
     }
   }
 
   dismissRedeemResult(): void {
-    this.redeemState = 'idle';
-    this.redeemMessage = null;
-    this.redeemedRupees = null;
-    this.withdrawNumber = '';
+    this.redeemState.set('idle');
+    this.redeemMessage.set(null);
+    this.redeemedRupees.set(null);
+    this.withdrawNumber.set('');
     this.duplicateSnapshot = null;
+    this.cdr.markForCheck();
   }
 
   private handleRedeemFailure(err: unknown, coins: number): void {
     if (err instanceof RedeemApiError && err.errorCode === 'DUPLICATE_CONVERSION') {
-      this.duplicateSnapshot = { key: '', coins, mobileNumber: this.withdrawNumber };
-      this.redeemMessage = 'This redemption was already processed.';
+      this.duplicateSnapshot = { key: '', coins, mobileNumber: this.withdrawNumber() };
+      this.redeemMessage.set('This redemption was already processed.');
+    } else if (err instanceof RedeemApiError) {
+      this.redeemMessage.set(err.message);
+    } else if (err instanceof Error) {
+      this.redeemMessage.set(err.message);
     } else {
-      this.redeemMessage = err instanceof Error ? err.message : 'Redemption failed. Please try again.';
+      this.redeemMessage.set('Redemption failed. Please try again.');
     }
-    this.redeemState = 'error';
+    this.redeemState.set('error');
+    this.cdr.markForCheck();
   }
 
   /** Reuses the same idempotency key for a retry of the identical (coins, mobileNumber)

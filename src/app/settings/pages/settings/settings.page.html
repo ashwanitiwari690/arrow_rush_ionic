@@ -30,7 +30,7 @@
       <ion-label>Notifications</ion-label>
       <ion-toggle slot="end" [checked]="settings().notificationsEnabled" (ionChange)="toggle('notificationsEnabled')"></ion-toggle>
     </ion-item>
-    <ion-item>
+    <!-- <ion-item>
       <ion-icon name="language-outline" slot="start"></ion-icon>
       <ion-label>Language</ion-label>
       <ion-segment
@@ -46,22 +46,33 @@
           <ion-label>HI</ion-label>
         </ion-segment-button>
       </ion-segment>
-    </ion-item>
+    </ion-item> -->
   </ion-list>
 
   <h2 class="section-title">About</h2>
   <ion-list class="settings-list" lines="full">
-    <ion-item button detail>
+    <ion-item button detail routerLink="/settings/privacy-policy">
       <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
       <ion-label>Privacy Policy</ion-label>
     </ion-item>
-    <ion-item button detail>
+    <ion-item button detail routerLink="/settings/terms-of-service">
       <ion-icon name="document-text-outline" slot="start"></ion-icon>
       <ion-label>Terms of Service</ion-label>
     </ion-item>
-    <ion-item button detail>
+    <ion-item button detail routerLink="/settings/about-arrow-rush">
       <ion-icon name="information-circle-outline" slot="start"></ion-icon>
       <ion-label>About Arrow Rush</ion-label>
     </ion-item>
   </ion-list>
+
+  <div class="reset-container">
+    <ion-button expand="block" fill="outline" color="danger" class="reset-button" (click)="confirmResetLevels()">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Reset Levels
+    </ion-button>
+  </div>
+
+  <div class="version-container">
+    <span class="version-text">Version {{ appVersion() }}</span>
+  </div>
 </ion-content>

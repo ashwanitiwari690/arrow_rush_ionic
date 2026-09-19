@@ -64,7 +64,7 @@ export class AchievementService {
     if (context.completedCount >= 1) toUnlock.push('FIRST_WIN');
     if (context.completedCount >= 10) toUnlock.push('LEVELS_10');
     if (context.completedCount >= 50) toUnlock.push('LEVELS_50');
-    if (context.completedCount >= context.totalLevels) toUnlock.push('LEVELS_100');
+    if (context.completedCount >= 100) toUnlock.push('LEVELS_100');
     if (context.hardOrAboveCompletedCount >= 10) toUnlock.push('HARD_LEVELS_10');
     if (!context.usedHint) toUnlock.push('NO_HINT_CLEAR');
     if (context.remainingSeconds > context.timeLimitSeconds / 2) toUnlock.push('UNDER_TIME_LIMIT');

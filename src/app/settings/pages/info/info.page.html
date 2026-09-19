@@ -1,0 +1,284 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/settings" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ pageTitle }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="info-content">
+  <div class="segment-container">
+    <ion-segment [value]="selectedTopic()" (ionChange)="setTopic($event.detail.value)">
+      <ion-segment-button value="about">
+        <ion-label>About</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="privacy">
+        <ion-label>Privacy</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="terms">
+        <ion-label>Terms</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  @if (selectedTopic() === 'about') {
+    <div class="info-section">
+      <div class="hero-card">
+        <div class="app-icon-badge">
+          <ion-icon name="navigate-circle"></ion-icon>
+        </div>
+        <h1 class="app-name">Arrow Rush</h1>
+        <p class="app-tagline">Master the Grid. Clear the Rush.</p>
+        <span class="app-badge">Version {{ appVersion() }}</span>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="game-controller-outline"></ion-icon>
+          The Game
+        </h3>
+        <p>
+          Arrow Rush is a fast-paced, minimalist directional puzzle game built to test your spatial
+          logic, timing, and forward-planning. Your goal is straightforward: clear every arrow from
+          the board along its flight path without colliding into other arrows or obstacles.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="color-palette-outline"></ion-icon>
+          Arrow Mechanics & Directions
+        </h3>
+        <p>
+          Every arrow on the grid is oriented in a cardinal direction and accented with distinct,
+          readable colors:
+        </p>
+        <ul class="feature-list">
+          <li>
+            <span class="dot purple"></span>
+            <div><strong>Purple Arrows:</strong> Facing upward with vertical clearance trajectories.</div>
+          </li>
+          <li>
+            <span class="dot blue"></span>
+            <div><strong>Blue Arrows:</strong> Oriented rightward, navigating horizontal lanes.</div>
+          </li>
+          <li>
+            <span class="dot green"></span>
+            <div><strong>Green Arrows:</strong> Pointing downward requiring sequenced unblocking.</div>
+          </li>
+          <li>
+            <span class="dot red"></span>
+            <div><strong>Red Arrows:</strong> Directed leftward through intersecting choke points.</div>
+          </li>
+          <li>
+            <span class="dot yellow"></span>
+            <div><strong>Yellow Arrows:</strong> Pivotal connectors across multi-step solutions.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="trophy-outline"></ion-icon>
+          Game Modes & Features
+        </h3>
+        <ul class="feature-list">
+          <li>
+            <ion-icon name="map-outline" class="item-icon"></ion-icon>
+            <div>
+              <strong>Handcrafted Level Map:</strong> Over 100 progressive levels with expanding grid
+              sizes and intricate obstacle layouts.
+            </div>
+          </li>
+          <li>
+            <ion-icon name="calendar-outline" class="item-icon"></ion-icon>
+            <div>
+              <strong>Daily Challenge:</strong> A unique daily puzzle that resets every 24 hours to test
+              your speed and build winning streaks.
+            </div>
+          </li>
+          <li>
+            <ion-icon name="shirt-outline" class="item-icon"></ion-icon>
+            <div>
+              <strong>Themes & Customization:</strong> Unlockable board themes and visual skins to
+              tailor the aesthetic to your style.
+            </div>
+          </li>
+          <li>
+            <ion-icon name="finger-print-outline" class="item-icon"></ion-icon>
+            <div>
+              <strong>Tactile Haptic Feedback:</strong> Responsive physical sensation for every arrow
+              launch, collision, and victory.
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          Offline-First & Fair Play
+        </h3>
+        <p>
+          Arrow Rush is fully playable offline. All puzzle progress, best scores, and unlocked
+          customizations are saved directly on your device so you can play anytime without an
+          active network connection.
+        </p>
+      </div>
+    </div>
+  }
+
+  @if (selectedTopic() === 'privacy') {
+    <div class="info-section">
+      <div class="header-card">
+        <ion-icon name="shield-checkmark-outline" class="header-icon"></ion-icon>
+        <h2>Privacy Policy</h2>
+        <span class="last-updated">Last Updated: September 2026</span>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          Our Privacy Commitment
+        </h3>
+        <p>
+          Arrow Rush values your personal privacy. We do not require you to create an account,
+          and we do not collect personal identifiers such as your real name, email address, or
+          phone number to play the game.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="phone-portrait-outline"></ion-icon>
+          Information Stored Locally
+        </h3>
+        <p>
+          To maintain your game state and custom preferences, Arrow Rush stores the following data
+          locally on your device:
+        </p>
+        <ul class="feature-list">
+          <li>Level progression, completion records, and star ratings.</li>
+          <li>In-game coin balance and unlocked board themes.</li>
+          <li>Settings preferences (sound, music, vibration, and language).</li>
+          <li>Daily challenge status and streak counts.</li>
+        </ul>
+        <p class="card-note">
+          This data remains exclusively on your device storage and is never sold or rented.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="megaphone-outline"></ion-icon>
+          Advertising & Third-Party Services
+        </h3>
+        <p>
+          To keep Arrow Rush free for all players, we may serve advertisements using reputable
+          ad providers such as Google AdMob. These services may collect pseudonymous identifiers
+          (such as the Android Advertising ID or IDFA) according to standard industry practices to
+          deliver relevant ads and prevent fraud.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="people-outline"></ion-icon>
+          Children's Privacy
+        </h3>
+        <p>
+          Arrow Rush is designed to be family-safe and suitable for general audiences. We do not
+          knowingly collect or solicit personal information from children under 13 years of age.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="mail-outline"></ion-icon>
+          Contact Us
+        </h3>
+        <p>
+          If you have questions or concerns regarding our privacy practices, please contact our
+          support team at:
+        </p>
+        <p class="contact-email">support&#64;arrowrush.game</p>
+      </div>
+    </div>
+  }
+
+  @if (selectedTopic() === 'terms') {
+    <div class="info-section">
+      <div class="header-card">
+        <ion-icon name="document-text-outline" class="header-icon"></ion-icon>
+        <h2>Terms of Service</h2>
+        <span class="last-updated">Last Updated: September 2026</span>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+          Acceptance of Terms
+        </h3>
+        <p>
+          By downloading, installing, or playing Arrow Rush, you agree to comply with and be bound
+          by these Terms of Service. If you do not agree with any part of these terms, please
+          uninstall and discontinue use of the game.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="ribbon-outline"></ion-icon>
+          License to Play
+        </h3>
+        <p>
+          We grant you a non-exclusive, non-transferable, revocable personal license to play
+          Arrow Rush on your personal devices strictly for personal, non-commercial entertainment
+          purposes.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="sparkles-outline"></ion-icon>
+          In-Game Coins & Virtual Items
+        </h3>
+        <p>
+          In-game coins are virtual currency earned through completing levels and daily challenges.
+          Coins and virtual goods are strictly meant for in-game progression and cosmetic customization
+          (such as unlocking board themes).
+        </p>
+        <p class="card-note">
+          In-game coins hold no real-world monetary value, cannot be exchanged or redeemed for cash
+          or real-world goods, and cannot be transferred between players or accounts.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="shield-outline"></ion-icon>
+          Fair Play & Intellectual Property
+        </h3>
+        <p>
+          All assets, including game mechanics, levels, arrow designs, audio tracks, and artwork,
+          are the intellectual property of the Arrow Rush creators. Players agree not to decompile,
+          reverse-engineer, modify, or exploit game code or mechanics in any way.
+        </p>
+      </div>
+
+      <div class="content-card">
+        <h3 class="card-title">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          Disclaimer of Warranties
+        </h3>
+        <p>
+          Arrow Rush is provided on an "as is" and "as available" basis. While we strive to maintain
+          a bug-free and delightful experience, we do not warrant that gameplay will be uninterrupted
+          or completely error-free.
+        </p>
+      </div>
+    </div>
+  }
+</ion-content>
+

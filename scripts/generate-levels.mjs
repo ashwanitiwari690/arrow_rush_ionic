@@ -1,19 +1,3 @@
-#!/usr/bin/env node
-/**
- * Generates the Arrow Rush level pack as data-driven JSON (src/assets/levels/*.json).
- *
- * Levels are NOT randomly dropped onto the board — each is built with a reverse
- * construction technique that guarantees at least one valid solve order exists:
- * blocks are placed on the grid in the REVERSE of their intended escape order, so
- * every block's exit path only ever has to avoid obstacles and blocks that are
- * already placed (i.e. blocks that will still be on the board when it's this
- * block's turn to move). This is the same guarantee-by-construction approach used
- * by classic sliding-block escape puzzles, and it lets difficulty be tuned by
- * parameters (grid size, block count, obstacle count) while every generated level
- * stays solvable by design. Run again with a bigger COUNT to grow past 1000 levels.
- *
- * Usage: node scripts/generate-levels.mjs
- */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +5,7 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(__dirname, '..', 'src', 'assets', 'levels');
-const COUNT = 100;
+const COUNT = 520;
 
 const COLORS = ['purple', 'blue', 'green', 'red', 'yellow'];
 const DIRECTIONS = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
@@ -43,10 +27,12 @@ function pick(rng, arr) {
 }
 
 function difficultyForLevel(n) {
-  if (n <= 25) return 'EASY';
-  if (n <= 55) return 'MEDIUM';
-  if (n <= 85) return 'HARD';
-  return 'EXPERT';
+  if (n <= 40) return 'EASY';
+  if (n <= 120) return 'MEDIUM';
+  if (n <= 240) return 'HARD';
+  if (n <= 360) return 'EXPERT';
+  if (n <= 450) return 'MASTER';
+  return 'INSANE';
 }
 
 function paramsForDifficulty(difficulty, n) {
@@ -55,9 +41,9 @@ function paramsForDifficulty(difficulty, n) {
       return {
         rows: 5,
         columns: 5,
-        blocks: 5 + Math.floor(n / 8),
-        obstacles: 2 + Math.floor(n / 10),
-        timeLimitSeconds: 100,
+        blocks: 6 + Math.floor((n - 1) / 10),
+        obstacles: 2 + Math.floor((n - 1) / 15),
+        timeLimitSeconds: 110,
         lives: 3,
         reward: { coins: 10, score: 500 },
       };
@@ -65,9 +51,9 @@ function paramsForDifficulty(difficulty, n) {
       return {
         rows: 6,
         columns: 6,
-        blocks: 8 + Math.floor((n - 25) / 6),
-        obstacles: 4 + Math.floor((n - 25) / 8),
-        timeLimitSeconds: 90,
+        blocks: 10 + Math.floor((n - 41) / 12),
+        obstacles: 3 + Math.floor((n - 41) / 20),
+        timeLimitSeconds: 95,
         lives: 3,
         reward: { coins: 20, score: 800 },
       };
@@ -75,21 +61,42 @@ function paramsForDifficulty(difficulty, n) {
       return {
         rows: 7,
         columns: 7,
-        blocks: 11 + Math.floor((n - 55) / 6),
-        obstacles: 6 + Math.floor((n - 55) / 6),
-        timeLimitSeconds: 80,
+        blocks: 15 + Math.floor((n - 121) / 15),
+        obstacles: 5 + Math.floor((n - 121) / 20),
+        timeLimitSeconds: 85,
         lives: 3,
         reward: { coins: 30, score: 1200 },
       };
-    default:
+    case 'EXPERT':
       return {
         rows: 8,
         columns: 8,
-        blocks: 15 + Math.floor((n - 85) / 4),
-        obstacles: 10 + Math.floor((n - 85) / 4),
+        blocks: 20 + Math.floor((n - 241) / 12),
+        obstacles: 7 + Math.floor((n - 241) / 16),
         timeLimitSeconds: 75,
         lives: 3,
         reward: { coins: 40, score: 1600 },
+      };
+    case 'MASTER':
+      return {
+        rows: 9,
+        columns: 9,
+        blocks: 26 + Math.floor((n - 361) / 9),
+        obstacles: 10 + Math.floor((n - 361) / 14),
+        timeLimitSeconds: 70,
+        lives: 3,
+        reward: { coins: 50, score: 2200 },
+      };
+    case 'INSANE':
+    default:
+      return {
+        rows: 10,
+        columns: 10,
+        blocks: 34 + Math.floor((n - 451) / 6),
+        obstacles: 12 + Math.floor((n - 451) / 10),
+        timeLimitSeconds: 65,
+        lives: 3,
+        reward: { coins: 60, score: 3000 },
       };
   }
 }
@@ -144,7 +151,7 @@ function buildLevel(levelId, rng) {
   const reverseSlots = [];
   let placedCount = 0;
   let globalAttempts = 0;
-  const maxGlobalAttempts = p.blocks * 200;
+  const maxGlobalAttempts = p.blocks * 400;
 
   while (placedCount < p.blocks && globalAttempts < maxGlobalAttempts) {
     globalAttempts++;
@@ -155,7 +162,7 @@ function buildLevel(levelId, rng) {
 
     const direction = pick(rng, DIRECTIONS);
     const path = pathToEdge(row, column, direction, rows, columns);
-    if (path.length === 0) continue; // already on the edge facing out — trivial, skip for variety
+    if (path.length === 0 && rng() > 0.35) continue;
     if (path.some((c) => occupied.has(cellKey(c.row, c.column)))) continue;
 
     occupied.add(key);
@@ -201,7 +208,7 @@ function generate() {
     let level = null;
     let seed = levelId * 104729; // large prime spacing keeps seeds well distributed
     let tries = 0;
-    while (!level && tries < 10) {
+    while (!level && tries < 25) {
       level = buildLevel(levelId, mulberry32(seed + tries));
       tries++;
     }
@@ -209,7 +216,7 @@ function generate() {
       throw new Error(`Failed to generate a solvable layout for level ${levelId}`);
     }
 
-    writeFileSync(join(OUT_DIR, `level-${String(levelId).padStart(3, '0')}.json`), JSON.stringify(level, null, 2));
+    writeFileSync(join(OUT_DIR, `level-${String(levelId).padStart(3, '0')}.json`), JSON.stringify(level));
     index.push({
       levelId: level.levelId,
       difficulty: level.difficulty,
@@ -219,7 +226,7 @@ function generate() {
     });
   }
 
-  writeFileSync(join(OUT_DIR, 'levels-index.json'), JSON.stringify(index, null, 2));
+  writeFileSync(join(OUT_DIR, 'levels-index.json'), JSON.stringify(index));
   console.log(`Generated ${COUNT} levels into ${OUT_DIR}`);
 }
 
