@@ -10,3 +10,81 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 30px 80px rgba(0, 0, 0, 0.6);
   }
 }
+
+// ─── Offline / No Internet Screen ──────────────────────────────────────────────
+// Full-viewport blocker shown when the device has no network connection.
+// Matches Arrow Rush's dark gaming aesthetic: gradient background, glowing text,
+// and the gold accent button used across the rest of the app.
+.offline-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% -10%, #212a54 0%, #0a0d1c 55%, #060812 100%);
+  padding: 24px;
+}
+
+.offline-shell {
+  width: min(100%, 380px);
+}
+
+.offline-card {
+  width: 100%;
+  text-align: center;
+  padding: 40px 28px;
+  background: var(--ar-surface, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--ar-border, rgba(255, 255, 255, 0.08));
+  border-radius: 22px;
+}
+
+.offline-icon {
+  margin-bottom: 18px;
+  color: var(--ar-text-dim, rgba(255, 255, 255, 0.45));
+
+  svg {
+    width: 64px;
+    height: 64px;
+    opacity: 0.6;
+  }
+}
+
+.offline-card h1 {
+  font-size: clamp(20px, 5.5vw, 24px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin: 0 0 12px;
+  color: var(--ar-text, #f2f3ff);
+}
+
+.offline-card p {
+  color: var(--ar-text-dim, rgba(255, 255, 255, 0.45));
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.offline-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffe17a, var(--ar-gold, #e6a817) 70%);
+  color: #1a1300;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 204, 51, 0.35);
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}

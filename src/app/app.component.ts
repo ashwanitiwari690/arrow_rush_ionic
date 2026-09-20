@@ -8,6 +8,7 @@ import { SettingsService } from './core/services/settings.service';
 import { MusicService } from './core/services/music.service';
 import { AppVerificationService } from './core/services/app-verification.service';
 import { AdService } from './core/services/ad.service';
+import { ConnectivityService } from './core/services/connectivity.service';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -23,6 +24,7 @@ export class AppComponent implements OnInit {
   private readonly musicService = inject(MusicService);
   private readonly appVerificationService = inject(AppVerificationService);
   private readonly adService = inject(AdService);
+  readonly connectivity = inject(ConnectivityService);
 
   private audioUnlocked = false;
   private currentUrl = '/home';
@@ -70,5 +72,9 @@ export class AppComponent implements OnInit {
     if (this.audioUnlocked) return;
     this.audioUnlocked = true;
     this.musicService.unlock();
+  }
+
+  onTryAgain(): void {
+    this.connectivity.recheck();
   }
 }
