@@ -1,3 +1,30 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  @if (connectivity.online()) {
+    <ion-router-outlet></ion-router-outlet>
+  } @else {
+    <main class="offline-page">
+      <div class="offline-shell">
+        <section class="offline-card">
+          <div class="offline-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 1l22 22"/>
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+              <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+          </div>
+          <h1 class="ar-glow-text">No Internet Connection</h1>
+          <p>Arrow Rush needs an internet connection to load ads and keep your rewards in sync. Please reconnect to keep playing.</p>
+          <button type="button" class="offline-retry-btn" (click)="onTryAgain()">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Try Again
+          </button>
+        </section>
+      </div>
+    </main>
+  }
 </ion-app>
