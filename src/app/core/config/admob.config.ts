@@ -9,7 +9,7 @@
  * traffic. See https://developers.google.com/admob/android/test-ads
  *
  * BEFORE RELEASING TO PRODUCTION:
- * 1. Create a real AdMob app for this project's exact package ID (com.arrowrush.game) in
+ * 1. Create a real AdMob app for this project's exact package ID (com.admobility.arrowrush) in
  *    the AdMob console, and create real Banner / Interstitial / Rewarded ad units under it.
  * 2. Replace the three IDs in AD_UNIT_IDS below with those real ad unit IDs.
  * 3. Replace the placeholder `admob_app_id` string in
