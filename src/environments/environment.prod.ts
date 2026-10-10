@@ -33,9 +33,9 @@ export const environment = {
   },
 
   coinConversion: {
-    minimumRedeemCoins: 1000,
-    coinsPerConversion: 1000,
-    rupeesPerConversion: 10,
+    minimumRedeemCoins: 100,
+    coinsPerConversion: 100,
+    rupeesPerConversion: 1,
   },
 
   debug: false,

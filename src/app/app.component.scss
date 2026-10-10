@@ -1,12 +1,15 @@
-// Arrow Rush is designed as a single-column mobile layout. On a genuine phone that's just
-// "the screen", but viewed in a wide desktop browser (or a tablet) an unconstrained
-// single column stretches buttons/list items edge to edge and looks broken. Above the
-// breakpoint, frame it like a phone centered in the window instead of letting it stretch.
-@media (min-width: 560px) {
-  ion-app {
+ion-app {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+// On wide desktop browser screens only (not on mobile, tablet, or Capacitor Android),
+// optionally frame the app like a phone centered in the window.
+@media (min-width: 992px) and (hover: hover) and (pointer: fine) {
+  body:not(.plt-android):not(.plt-mobile):not(.plt-capacitor) ion-app {
     max-width: 480px;
     margin: 0 auto;
-    min-height: 100vh;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 30px 80px rgba(0, 0, 0, 0.6);
   }
 }
@@ -16,12 +19,15 @@
 // Matches Arrow Rush's dark gaming aesthetic: gradient background, glowing text,
 // and the gold accent button used across the rest of the app.
 .offline-page {
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 50% -10%, #212a54 0%, #0a0d1c 55%, #060812 100%);
-  padding: 24px;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .offline-shell {

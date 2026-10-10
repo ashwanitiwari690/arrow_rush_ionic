@@ -43,9 +43,9 @@ export const environment = {
   // Placeholder only — the frontend must never compute rupee amounts itself.
   // Real values are owned by the centralized backend once redemption goes live.
   coinConversion: {
-    minimumRedeemCoins: 1000,
-    coinsPerConversion: 1000,
-    rupeesPerConversion: 10,
+    minimumRedeemCoins: 100,
+    coinsPerConversion: 100,
+    rupeesPerConversion: 1,
   },
 
   debug: true,
