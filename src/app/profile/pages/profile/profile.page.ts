@@ -104,7 +104,9 @@ export class ProfilePage implements OnInit {
    * already-invalid value — matches how a phone-number field should feel to type into. */
   onWithdrawNumberInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.withdrawNumber.set(input.value.replace(/\D/g, '').slice(0, 10));
+    const numericValue = input.value.replace(/\D/g, '').slice(0, 10);
+    input.value = numericValue;
+    this.withdrawNumber.set(numericValue);
   }
 
   async onWithdraw(): Promise<void> {
