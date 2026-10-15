@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  appVersion: '1.0.0',
+  appVersion: '1.0.1',
 
   // Identifies this game to the centralized reward/wallet backend.
   gameCode: 'ARROW_RUSH',
