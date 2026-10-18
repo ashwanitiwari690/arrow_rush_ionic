@@ -23,9 +23,9 @@
  *    requesting any ad if the app will have EU/UK users — not implemented here.
  */
 export const AD_UNIT_IDS = {
-  banner: 'ca-app-pub-3940256099942544/6300978111',
-  interstitial: 'ca-app-pub-3940256099942544/1033173712',
-  rewarded: 'ca-app-pub-3940256099942544/5224354917',
+  banner: 'ca-app-pub-2030586584805301/7095504267',
+  interstitial: 'ca-app-pub-2030586584805301/2109936748',
+  rewarded: 'ca-app-pub-2030586584805301/8483773404',
 } as const;
 
 /** How long (ms) to wait for an ad to finish loading before giving up on showing it. */

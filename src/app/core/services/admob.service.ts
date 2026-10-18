@@ -36,6 +36,11 @@ export class AdMobService extends AdService {
   private interstitialLoading?: Promise<void>;
   private roundsSinceInterstitial = 0;
 
+  /** Minimum interval (ms) between full-screen ads. Prevents high ad density and policy flags. */
+  private readonly MIN_INTERSTITIAL_COOLDOWN_MS = 75000; // 75 seconds
+  // Start with current timestamp so users get a clean, ad-free experience when opening the game
+  private lastFullScreenAdTime = Date.now();
+
   private rewardedReady = false;
   private rewardedLoading?: Promise<void>;
   // Guards against a second tap starting a second rewarded flow (and thus a second grant)
@@ -46,7 +51,7 @@ export class AdMobService extends AdService {
   initialize(): Promise<void> {
     if (!this.isNative) return this.mock.initialize();
     if (!this.initPromise) {
-      this.initPromise = AdMob.initialize({ initializeForTesting: true })
+      this.initPromise = AdMob.initialize({ initializeForTesting: !environment.production })
         .then(() => {
           void this.preloadInterstitial();
           void this.preloadRewarded();
@@ -81,6 +86,9 @@ export class AdMobService extends AdService {
 
       this.rewardedReady = false;
       const granted = await this.awaitRewardConfirmation();
+      // Reset cooldown and counter: user just watched a rewarded ad, so never follow up with an interstitial
+      this.lastFullScreenAdTime = Date.now();
+      this.roundsSinceInterstitial = 0;
       void this.preloadRewarded();
 
       return granted ? { granted: true } : { granted: false, reason: 'Ad was closed before it finished.' };
@@ -100,18 +108,29 @@ export class AdMobService extends AdService {
     if (!this.interstitialReady) return;
 
     this.interstitialReady = false;
+    this.lastFullScreenAdTime = Date.now();
     try {
       await this.awaitInterstitialDismissal();
     } finally {
+      this.lastFullScreenAdTime = Date.now();
       void this.preloadInterstitial();
     }
   }
 
   async maybeShowInterstitialAtBreakpoint(): Promise<void> {
     if (!environment.features.interstitialAdsEnabled) return;
+
     this.roundsSinceInterstitial++;
+
+    // 1. Must satisfy rounds interval threshold (e.g. every 3 levels)
     if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) return;
+
+    // 2. Must satisfy time cooldown (at least 75 seconds between full-screen ads)
+    const now = Date.now();
+    if (now - this.lastFullScreenAdTime < this.MIN_INTERSTITIAL_COOLDOWN_MS) return;
+
     this.roundsSinceInterstitial = 0;
+    this.lastFullScreenAdTime = now;
     await this.showInterstitialAd();
   }
 
