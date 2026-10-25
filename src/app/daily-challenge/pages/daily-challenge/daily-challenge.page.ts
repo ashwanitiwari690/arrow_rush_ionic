@@ -28,6 +28,14 @@ export class DailyChallengePage implements OnInit {
   readonly isWatchingAd = signal(false);
 
   async ngOnInit(): Promise<void> {
+    await this.refreshData();
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    await this.refreshData();
+  }
+
+  private async refreshData(): Promise<void> {
     await this.coinService.init();
     const gameConfig = await this.config.getGameConfig();
     const rewardConfig = await this.config.getRewardConfig();
@@ -37,15 +45,18 @@ export class DailyChallengePage implements OnInit {
 
   onPlay(): void {
     const status = this.status();
-    if (!status) return;
+    if (!status || status.completed || this.attemptsRemaining <= 0) return;
     void this.router.navigate(['/game-play', status.levelId], { queryParams: { mode: 'daily' } });
   }
 
   async onClaim(): Promise<void> {
     if (this.isClaiming) return;
     this.isClaiming = true;
-    await this.dailyChallengeService.claimReward();
-    this.isClaiming = false;
+    try {
+      await this.dailyChallengeService.claimReward();
+    } finally {
+      this.isClaiming = false;
+    }
   }
 
   get attemptsRemaining(): number {

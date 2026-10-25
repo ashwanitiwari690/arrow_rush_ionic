@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal }
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ImpactStyle } from '@capacitor/haptics';
+import { ToastController } from '@ionic/angular/lazy';
 
 import { LevelData, PowerUpType } from '../../../core/models/game.models';
 import { GameStateService } from '../../../core/game-engine/game-state.service';
@@ -18,7 +19,7 @@ import { DailyChallengeService } from '../../../core/services/daily-challenge.se
 import { ConfigService } from '../../../core/services/config.service';
 import { SoundService } from '../../../core/services/sound.service';
 import { HapticsService } from '../../../core/services/haptics.service';
-import { AdService } from '../../../core/services/ad.service';
+import { AdService, RewardedAdResult } from '../../../core/services/ad.service';
 import { GameRewardApiService } from '../../../core/services/game-reward-api.service';
 import { environment } from '../../../../environments/environment';
 import { BlockedFeedback } from '../../components/game-board/game-board.component';
@@ -50,6 +51,7 @@ export class GamePlayPage implements OnInit, OnDestroy {
   private readonly rewardApi = inject(GameRewardApiService);
   private readonly engine = inject(GameEngineService);
   private readonly shuffleService = inject(ShuffleService);
+  private readonly toastController = inject(ToastController);
 
   readonly gameStateService = inject(GameStateService);
   readonly timer = inject(GameTimerService);
@@ -79,7 +81,7 @@ export class GamePlayPage implements OnInit, OnDestroy {
   private usedHint = false;
   private powerUpsUsed = 0;
   private rewardSubmitted = false;
-  private isDailyChallenge = false;
+  isDailyChallenge = false;
   private outOfLivesLevelId: number | null = null;
   private paramSub: Subscription | null = null;
 
@@ -122,6 +124,13 @@ export class GamePlayPage implements OnInit, OnDestroy {
     this.rewardSubmitted = false;
 
     await this.livesService.init();
+    if (this.isDailyChallenge) {
+      const status = this.dailyChallengeService.status();
+      if (status?.completed || this.dailyChallengeService.attemptsRemaining() <= 0) {
+        void this.router.navigateByUrl('/daily-challenge');
+        return;
+      }
+    }
     if (!this.livesService.hasLives()) {
       // Blocks starting (or restarting) a level outright while out of lives, rather than
       // letting any amount of gameplay run with nothing backing its eventual ad/coin payout.
@@ -186,7 +195,11 @@ export class GamePlayPage implements OnInit, OnDestroy {
     this.coinsEarned.set(LEVEL_COMPLETE_COINS);
     this.starsEarned.set(stars);
 
-    await this.levelService.completeLevel(level.levelId, score, elapsed, stars, this.totalLevels);
+    if (this.isDailyChallenge) {
+      await this.dailyChallengeService.recordAttempt(true);
+    } else {
+      await this.levelService.completeLevel(level.levelId, score, elapsed, stars, this.totalLevels);
+    }
 
     await this.rewardApi.submitGameReward({
       gameCode: environment.gameCode,
@@ -206,9 +219,6 @@ export class GamePlayPage implements OnInit, OnDestroy {
       totalLevels: this.totalLevels,
     });
 
-    if (this.isDailyChallenge) {
-      await this.dailyChallengeService.recordAttempt(true);
-    }
   }
 
   private onTimeExpired(): void {
@@ -228,10 +238,14 @@ export class GamePlayPage implements OnInit, OnDestroy {
   }
 
   get hasNextLevel(): boolean {
-    return this.level() !== null && this.level()!.levelId < this.totalLevels;
+    return !this.isDailyChallenge && this.level() !== null && this.level()!.levelId < this.totalLevels;
   }
 
   async onNextLevel(): Promise<void> {
+    if (this.isDailyChallenge) {
+      await this.onDailyComplete();
+      return;
+    }
     const level = this.level();
     if (!level || this.isNavigating()) return;
     this.isNavigating.set(true);
@@ -240,7 +254,19 @@ export class GamePlayPage implements OnInit, OnDestroy {
     this.isNavigating.set(false);
   }
 
+  async onDailyComplete(): Promise<void> {
+    if (this.isNavigating()) return;
+    this.isNavigating.set(true);
+    await this.adService.maybeShowInterstitialAtBreakpoint();
+    void this.router.navigateByUrl('/daily-challenge');
+    this.isNavigating.set(false);
+  }
+
   async onReplay(): Promise<void> {
+    if (this.isDailyChallenge) {
+      await this.onDailyComplete();
+      return;
+    }
     const level = this.level();
     if (!level || this.isNavigating()) return;
     this.isNavigating.set(true);
@@ -253,7 +279,11 @@ export class GamePlayPage implements OnInit, OnDestroy {
     if (this.isNavigating()) return;
     this.isNavigating.set(true);
     await this.adService.maybeShowInterstitialAtBreakpoint();
-    void this.router.navigateByUrl('/level-map');
+    if (this.isDailyChallenge) {
+      void this.router.navigateByUrl('/daily-challenge');
+    } else {
+      void this.router.navigateByUrl('/level-map');
+    }
     this.isNavigating.set(false);
   }
 
@@ -316,7 +346,11 @@ export class GamePlayPage implements OnInit, OnDestroy {
 
   onHomeTap(): void {
     this.timer.pause();
-    void this.router.navigateByUrl('/home');
+    if (this.isDailyChallenge) {
+      void this.router.navigateByUrl('/daily-challenge');
+    } else {
+      void this.router.navigateByUrl('/home');
+    }
   }
 
   onResume(): void {
@@ -335,7 +369,11 @@ export class GamePlayPage implements OnInit, OnDestroy {
   }
 
   onExitFromPause(): void {
-    void this.router.navigateByUrl('/home');
+    if (this.isDailyChallenge) {
+      void this.router.navigateByUrl('/daily-challenge');
+    } else {
+      void this.router.navigateByUrl('/home');
+    }
   }
 
   async onPowerUp(type: PowerUpType): Promise<void> {
@@ -354,13 +392,46 @@ export class GamePlayPage implements OnInit, OnDestroy {
    * spends it — the player's intent in tapping was to use it right now. */
   private async watchAdForPowerUp(type: PowerUpType): Promise<void> {
     if (!this.adRewardAvailable || this.adLoadingPowerUp()) return;
+    this.timer.pause();
     this.adLoadingPowerUp.set(type);
-    const result = await this.adService.showRewardedAd();
-    this.adLoadingPowerUp.set(null);
-    if (!result.granted) return;
+
+    let result: RewardedAdResult;
+    try {
+      result = await this.adService.showRewardedAd();
+    } finally {
+      this.adLoadingPowerUp.set(null);
+      this.timer.resume();
+    }
+
+    const labels: Record<PowerUpType, string> = {
+      HINT: 'Hint',
+      UNDO: 'Undo',
+      SHUFFLE: 'Shuffle',
+      EXTRA: 'Extra Time',
+    };
+
+    if (!result.granted) {
+      const toast = await this.toastController.create({
+        message: result.reason ?? 'Ad closed before finishing. No reward added.',
+        duration: 2200,
+        position: 'top',
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
 
     await this.powerupService.grant(type, 1);
-    await this.usePowerUp(type);
+    this.soundService.play('buttonClick');
+    void this.hapticsService.impact(ImpactStyle.Medium);
+
+    const toast = await this.toastController.create({
+      message: `+1 ${labels[type]} added!`,
+      duration: 2000,
+      position: 'top',
+      color: 'success',
+    });
+    await toast.present();
   }
 
   private async usePowerUp(type: PowerUpType): Promise<void> {

@@ -10,6 +10,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 export class GameOverPanelComponent {
   @Input() adAvailable = false;
   @Input() isProcessingAd = false;
+  @Input() isDailyChallenge = false;
 
   @Output() retry = new EventEmitter<void>();
   @Output() watchAdAndContinue = new EventEmitter<void>();

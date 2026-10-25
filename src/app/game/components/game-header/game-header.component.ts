@@ -12,6 +12,7 @@ export class GameHeaderComponent {
   @Input() remainingSeconds = 0;
   @Input() lives = 3;
   @Input() maxLives = 3;
+  @Input() isDaily = false;
   @Output() pauseTap = new EventEmitter<void>();
   @Output() homeTap = new EventEmitter<void>();
 

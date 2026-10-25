@@ -15,7 +15,9 @@
           {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad & Continue' }}
         </ion-button>
       }
-      <ion-button expand="block" fill="clear" (click)="levelMap.emit()">Level Map</ion-button>
+      <ion-button expand="block" fill="clear" (click)="levelMap.emit()">
+        {{ isDailyChallenge ? 'Back to Daily Challenge' : 'Level Map' }}
+      </ion-button>
     </div>
   </div>
 </div>

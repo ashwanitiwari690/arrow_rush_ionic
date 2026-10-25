@@ -1,6 +1,6 @@
 <div class="overlay">
   <div class="panel">
-    <h1 class="ar-glow-text">LEVEL COMPLETE!</h1>
+    <h1 class="ar-glow-text">{{ isDailyChallenge ? 'DAILY CHALLENGE COMPLETE!' : 'LEVEL COMPLETE!' }}</h1>
 
     <div class="stars">
       @for (filled of starArray; track $index) {
@@ -42,13 +42,19 @@
     }
 
     <div class="actions">
-      @if (hasNextLevel) {
-        <ion-button expand="block" color="primary" [disabled]="isProcessingAd" (click)="nextLevel.emit()">
-          Next Level
+      @if (isDailyChallenge) {
+        <ion-button expand="block" color="primary" [disabled]="isProcessingAd" (click)="dailyComplete.emit()">
+          Claim Daily Reward
         </ion-button>
+      } @else {
+        @if (hasNextLevel) {
+          <ion-button expand="block" color="primary" [disabled]="isProcessingAd" (click)="nextLevel.emit()">
+            Next Level
+          </ion-button>
+        }
+        <ion-button expand="block" fill="outline" [disabled]="isProcessingAd" (click)="replay.emit()">Replay</ion-button>
+        <ion-button expand="block" fill="clear" [disabled]="isProcessingAd" (click)="levelMap.emit()">Level Map</ion-button>
       }
-      <ion-button expand="block" fill="outline" [disabled]="isProcessingAd" (click)="replay.emit()">Replay</ion-button>
-      <ion-button expand="block" fill="clear" [disabled]="isProcessingAd" (click)="levelMap.emit()">Level Map</ion-button>
     </div>
   </div>
 </div>

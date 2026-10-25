@@ -6,7 +6,7 @@
       </button>
       <app-coin-balance></app-coin-balance>
     </div>
-    <div class="level-label">LEVEL {{ levelId }}</div>
+    <div class="level-label">{{ isDaily ? 'DAILY CHALLENGE' : 'LEVEL ' + levelId }}</div>
     <button type="button" class="icon-btn" (click)="pauseTap.emit()" aria-label="Pause">
       <ion-icon name="pause"></ion-icon>
     </button>

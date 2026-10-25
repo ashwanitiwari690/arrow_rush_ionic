@@ -114,7 +114,8 @@ export class GameEngineService {
 
   /** First block (if any) that can currently escape — used to drive the Hint power-up. */
   getHintBlockId(state: GameState): string | null {
-    const movable = state.blocks.filter((b) => this.validator.canMove(state, b.id));
+    const occupied = this.validator.getOccupiedCellSet(state);
+    const movable = state.blocks.filter((b) => this.validator.canMoveWithOccupied(state, b, occupied));
     if (movable.length === 0) return null;
     // Prefer the block requiring the shortest exit path — usually the most "obvious" next move.
     movable.sort((a, b) => {
@@ -126,7 +127,8 @@ export class GameEngineService {
   }
 
   hasAnyMove(state: GameState): boolean {
-    return state.blocks.some((b) => this.validator.canMove(state, b.id));
+    const occupied = this.validator.getOccupiedCellSet(state);
+    return state.blocks.some((b) => this.validator.canMoveWithOccupied(state, b, occupied));
   }
 
   calculateScore(

@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -6,6 +8,7 @@ import {
   OnDestroy,
   Output,
   SimpleChanges,
+  inject,
 } from '@angular/core';
 import { ArrowBlock, GameState } from '../../../core/models/game.models';
 
@@ -32,6 +35,7 @@ const SHAKE_ANIMATION_MS = 400;
   templateUrl: './game-board.component.html',
   styleUrls: ['./game-board.component.scss'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameBoardComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) state!: GameState;
@@ -40,18 +44,19 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
 
   @Output() blockTap = new EventEmitter<string>();
 
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  cellIndices: number[] = [];
   ghosts: Ghost[] = [];
   shakingBlockId: string | null = null;
 
   private previousBlocks: ArrowBlock[] = [];
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
-
-  get cellIndices(): number[] {
-    return Array.from({ length: this.state.rows * this.state.columns }, (_, i) => i);
-  }
+  private cachedGridSize = '';
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['state'] && this.state) {
+      this.updateCellIndices();
       this.diffForEscapes();
     }
     if (changes['blocked'] && this.blocked) {
@@ -67,6 +72,15 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
     this.blockTap.emit(blockId);
   }
 
+  private updateCellIndices(): void {
+    const sizeKey = `${this.state.rows}x${this.state.columns}`;
+    if (this.cachedGridSize !== sizeKey) {
+      this.cachedGridSize = sizeKey;
+      const count = this.state.rows * this.state.columns;
+      this.cellIndices = Array.from({ length: count }, (_, i) => i);
+    }
+  }
+
   private diffForEscapes(): void {
     const currentIds = new Set(this.state.blocks.map((b) => b.id));
     const removed = this.previousBlocks.filter((b) => !currentIds.has(b.id));
@@ -77,17 +91,23 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
       const timer = setTimeout(() => {
         this.ghosts = this.ghosts.filter((g) => g.key !== key);
         this.timers.delete(timer);
+        this.cdr.markForCheck();
       }, ESCAPE_ANIMATION_MS);
       this.timers.add(timer);
     }
 
     this.previousBlocks = this.state.blocks;
+    this.cdr.markForCheck();
   }
 
   private triggerShake(blockId: string): void {
     this.shakingBlockId = blockId;
+    this.cdr.markForCheck();
     const timer = setTimeout(() => {
-      if (this.shakingBlockId === blockId) this.shakingBlockId = null;
+      if (this.shakingBlockId === blockId) {
+        this.shakingBlockId = null;
+        this.cdr.markForCheck();
+      }
       this.timers.delete(timer);
     }, SHAKE_ANIMATION_MS);
     this.timers.add(timer);

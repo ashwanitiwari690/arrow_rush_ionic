@@ -41,6 +41,22 @@ export class MoveValidatorService {
     return path.every((cell) => !occupied.has(this.cellKey(cell)));
   }
 
+  canMoveWithOccupied(state: GameState, block: ArrowBlock, occupied: Set<string>): boolean {
+    const path = this.calculatePath(state, block);
+    return path.every((cell) => !occupied.has(this.cellKey(cell)));
+  }
+
+  getOccupiedCellSet(state: GameState): Set<string> {
+    const occupied = new Set<string>();
+    for (const b of state.blocks) {
+      occupied.add(this.cellKey(b));
+    }
+    for (const o of state.obstacles) {
+      occupied.add(this.cellKey(o));
+    }
+    return occupied;
+  }
+
   private occupiedCellSet(state: GameState, excludeBlockId: string): Set<string> {
     const occupied = new Set<string>();
     for (const b of state.blocks) {

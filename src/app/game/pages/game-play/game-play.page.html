@@ -3,6 +3,7 @@
     <div class="game-play-layout">
       <app-game-header
         [levelId]="lvl.levelId"
+        [isDaily]="isDailyChallenge"
         [remainingSeconds]="timer.remainingSeconds()"
         [lives]="gameStateService.state()?.livesRemaining ?? lvl.lives"
         [maxLives]="lvl.lives"
@@ -78,18 +79,21 @@
       [timeSeconds]="timer.elapsedSeconds()"
       [stars]="starsEarned()"
       [hasNextLevel]="hasNextLevel"
+      [isDailyChallenge]="isDailyChallenge"
       [adAvailable]="adRewardAvailable"
       [isProcessingAd]="isProcessingAd() || isNavigating()"
       [coinsDoubled]="doubledCoins()"
       (nextLevel)="onNextLevel()"
       (replay)="onReplay()"
       (levelMap)="onLevelMap()"
+      (dailyComplete)="onDailyComplete()"
       (watchAdForDoubleCoins)="onWatchAdForDoubleCoins()"
     ></app-level-complete-panel>
   }
 
   @if (isGameOver()) {
     <app-game-over-panel
+      [isDailyChallenge]="isDailyChallenge"
       [adAvailable]="adRewardAvailable"
       [isProcessingAd]="isProcessingAd() || isNavigating()"
       (retry)="onRetry()"

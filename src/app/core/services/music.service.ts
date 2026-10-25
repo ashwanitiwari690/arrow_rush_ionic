@@ -1,4 +1,4 @@
-import { Injectable, effect, inject } from '@angular/core';
+import { Injectable, NgZone, effect, inject } from '@angular/core';
 import { SettingsService } from './settings.service';
 
 export type MusicTrack = 'menu' | 'gameplay';
@@ -122,6 +122,7 @@ const GAMEPLAY_TRACK: TrackConfig = {
 @Injectable({ providedIn: 'root' })
 export class MusicService {
   private readonly settingsService = inject(SettingsService);
+  private readonly ngZone = inject(NgZone);
 
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -160,6 +161,16 @@ export class MusicService {
   stop(): void {
     this.currentTrack = null;
     this.stopTimer();
+  }
+
+  pause(): void {
+    this.stopTimer();
+  }
+
+  resume(): void {
+    if (this.currentTrack && !this.stepTimer && this.settingsService.settings().musicEnabled) {
+      this.restartTrack();
+    }
   }
 
   unlock(): void {
@@ -218,7 +229,9 @@ export class MusicService {
     };
 
     tick();
-    this.stepTimer = setInterval(tick, config.stepIntervalMs);
+    this.ngZone.runOutsideAngular(() => {
+      this.stepTimer = setInterval(tick, config.stepIntervalMs);
+    });
   }
 
   /**
@@ -242,19 +255,8 @@ export class MusicService {
     osc1.start(startAt);
     osc1.stop(startAt + 0.3);
 
-    // Soft chime overtone (adds sparkle without harshness)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(frequency * 2, startAt);
+    // Lightweight single-harmonic crystal chime avoids excess AudioNode churn
 
-    gain2.gain.setValueAtTime(0.0001, startAt);
-    gain2.gain.exponentialRampToValueAtTime(this.musicVolume * 0.14, startAt + 0.004);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.12);
-
-    osc2.connect(gain2).connect(out);
-    osc2.start(startAt);
-    osc2.stop(startAt + 0.15);
   }
 
   /**
@@ -262,9 +264,10 @@ export class MusicService {
    */
   private playChord(ctx: AudioContext, frequencies: number[], startAt: number, duration: number): void {
     const out = this.filterNode ?? ctx.destination;
-    const perVoiceGain = (this.musicVolume * 0.22) / frequencies.length;
+    const voices = frequencies.slice(0, 2);
+    const perVoiceGain = (this.musicVolume * 0.24) / voices.length;
 
-    for (const freq of frequencies) {
+    for (const freq of voices) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 

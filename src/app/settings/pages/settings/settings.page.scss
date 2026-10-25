@@ -43,10 +43,14 @@
     }
 
     ion-toggle {
-      --track-background: var(--ar-surface-2);
-      --track-background-checked: var(--ar-gold);
-      --handle-background: #6b7280;
-      --handle-background-checked: #1a1300;
+      --background: rgba(255, 255, 255, 0.16);
+      --background-checked: var(--ar-gold, #ffcc33);
+      --track-background: rgba(255, 255, 255, 0.16);
+      --track-background-checked: var(--ar-gold, #ffcc33);
+      --handle-background: #ffffff;
+      --handle-background-checked: #ffffff;
+      --handle-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
     }
   }
 }
@@ -86,4 +90,3 @@
     opacity: 0.8;
   }
 }
-

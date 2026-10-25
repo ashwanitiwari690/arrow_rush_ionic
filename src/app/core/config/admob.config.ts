@@ -1,32 +1,48 @@
+import { environment } from '../../../environments/environment';
+
 /**
- * Centralized AdMob configuration — the ONLY place ad unit IDs live. Every ad call in the
- * app goes through `AdMobService`, which reads its IDs from here, so going live later is a
- * one-line-per-format swap in this file and nowhere else.
- *
- * The IDs below are Google's official public sample ad unit IDs. They always serve a
- * clearly labeled "Test Ad" and are safe to ship during development — using real ad unit
- * IDs before an app is reviewed/approved risks the AdMob account being flagged for invalid
- * traffic. See https://developers.google.com/admob/android/test-ads
- *
- * BEFORE RELEASING TO PRODUCTION:
- * 1. Create a real AdMob app for this project's exact package ID (com.admobility.arrowrush) in
- *    the AdMob console, and create real Banner / Interstitial / Rewarded ad units under it.
- * 2. Replace the three IDs in AD_UNIT_IDS below with those real ad unit IDs.
- * 3. Replace the placeholder `admob_app_id` string in
- *    android/app/src/main/res/values/strings.xml with the real AdMob App ID (it currently
- *    holds Google's public sample App ID, `ca-app-pub-3940256099942544~3347511713`, purely
- *    so the SDK has something valid to initialize against during development). Never reuse
- *    another app's App ID — it's tied to one exact app listing and misattributes revenue.
- * 4. Remove `initializeForTesting: true` from the `AdMob.initialize()` call in
- *    AdMobService — see that file.
- * 5. Add a GDPR/UMP consent flow (`AdMob.requestConsentInfo` / `showConsentForm`) before
- *    requesting any ad if the app will have EU/UK users — not implemented here.
+ * Official Google sample test ad unit IDs for Android.
+ * Always serve test ads with 100% fill rate and zero risk of invalid traffic policy penalties.
+ * See: https://developers.google.com/admob/android/test-ads
  */
-export const AD_UNIT_IDS = {
+export const TEST_AD_UNIT_IDS = {
+  banner: 'ca-app-pub-3940256099942544/6300978111',
+  interstitial: 'ca-app-pub-3940256099942544/1033173712',
+  rewarded: 'ca-app-pub-3940256099942544/5224354917',
+} as const;
+
+/**
+ * Live production AdMob ad unit IDs for package `com.admobility.arrowrush`.
+ * Used ONLY when `environment.production` is true.
+ */
+export const PROD_AD_UNIT_IDS = {
   banner: 'ca-app-pub-2030586584805301/7095504267',
   interstitial: 'ca-app-pub-2030586584805301/2109936748',
   rewarded: 'ca-app-pub-2030586584805301/8483773404',
 } as const;
 
+/**
+ * Resolves the appropriate ad unit ID based on current build environment.
+ * Prevents test and production ad configurations from ever being mixed accidentally.
+ */
+export function getAdUnitId(format: 'banner' | 'interstitial' | 'rewarded'): string {
+  return environment.production ? PROD_AD_UNIT_IDS[format] : TEST_AD_UNIT_IDS[format];
+}
+
+/**
+ * Centralized ad unit ID map with dynamic environment getters.
+ */
+export const AD_UNIT_IDS = {
+  get banner(): string {
+    return getAdUnitId('banner');
+  },
+  get interstitial(): string {
+    return getAdUnitId('interstitial');
+  },
+  get rewarded(): string {
+    return getAdUnitId('rewarded');
+  },
+};
+
 /** How long (ms) to wait for an ad to finish loading before giving up on showing it. */
-export const AD_LOAD_TIMEOUT_MS = 4000;
+export const AD_LOAD_TIMEOUT_MS = 8000;

@@ -13,22 +13,22 @@
     <ion-item>
       <ion-icon name="volume-high-outline" slot="start"></ion-icon>
       <ion-label>Sound</ion-label>
-      <ion-toggle slot="end" [checked]="settings().soundEnabled" (ionChange)="toggle('soundEnabled')"></ion-toggle>
+      <ion-toggle mode="ios" slot="end" [checked]="settings().soundEnabled" (ionChange)="toggle('soundEnabled')"></ion-toggle>
     </ion-item>
     <ion-item>
       <ion-icon name="musical-notes-outline" slot="start"></ion-icon>
       <ion-label>Music</ion-label>
-      <ion-toggle slot="end" [checked]="settings().musicEnabled" (ionChange)="toggle('musicEnabled')"></ion-toggle>
+      <ion-toggle mode="ios" slot="end" [checked]="settings().musicEnabled" (ionChange)="toggle('musicEnabled')"></ion-toggle>
     </ion-item>
     <ion-item>
       <ion-icon name="phone-portrait-outline" slot="start"></ion-icon>
       <ion-label>Vibration</ion-label>
-      <ion-toggle slot="end" [checked]="settings().vibrationEnabled" (ionChange)="toggle('vibrationEnabled')"></ion-toggle>
+      <ion-toggle mode="ios" slot="end" [checked]="settings().vibrationEnabled" (ionChange)="toggle('vibrationEnabled')"></ion-toggle>
     </ion-item>
     <ion-item>
       <ion-icon name="notifications-outline" slot="start"></ion-icon>
       <ion-label>Notifications</ion-label>
-      <ion-toggle slot="end" [checked]="settings().notificationsEnabled" (ionChange)="toggle('notificationsEnabled')"></ion-toggle>
+      <ion-toggle mode="ios" slot="end" [checked]="settings().notificationsEnabled" (ionChange)="toggle('notificationsEnabled')"></ion-toggle>
     </ion-item>
     <!-- <ion-item>
       <ion-icon name="language-outline" slot="start"></ion-icon>

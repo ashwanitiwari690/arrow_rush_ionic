@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import {
   AdMob,
+  AdmobConsentStatus,
   BannerAdOptions,
   BannerAdPluginEvents,
   BannerAdPosition,
@@ -11,26 +12,29 @@ import {
 } from '@capacitor-community/admob';
 import { AdService, RewardedAdResult } from './ad.service';
 import { MockAdService } from './mock-ad.service';
+import { MusicService } from './music.service';
 import { AD_UNIT_IDS, AD_LOAD_TIMEOUT_MS } from '../config/admob.config';
 import { environment } from '../../../environments/environment';
 
 /**
- * Real AdMob-backed implementation of AdService, using @capacitor-community/admob. Ad unit
- * IDs are never hardcoded here — see admob.config.ts, the single place to swap in real IDs.
+ * Real AdMob-backed implementation of AdService, using @capacitor-community/admob.
+ * Ad unit IDs are resolved dynamically based on environment (see admob.config.ts).
  *
- * Ads only run on native platforms (Android) — the plugin has no meaningful web
- * implementation, so every native call here is gated behind `Capacitor.isNativePlatform()`
- * and delegates to MockAdService in a desktop browser (`ng serve`), which keeps the UI
+ * Ads only run on native platforms (Android) — gated behind `Capacitor.isNativePlatform()`
+ * and delegates to MockAdService in a desktop browser (`ng serve`), keeping the UI
  * testable without a device while guaranteeing web can never grant a real reward.
  */
 @Injectable({ providedIn: 'root' })
 export class AdMobService extends AdService {
   private readonly mock = inject(MockAdService);
+  private readonly music = inject(MusicService);
 
   private readonly isNative = Capacitor.isNativePlatform();
 
   private initPromise?: Promise<void>;
   private bannerVisible = false;
+  private bannerPendingHide = false;
+  private bannerListenersRegistered = false;
 
   private interstitialReady = false;
   private interstitialLoading?: Promise<void>;
@@ -43,23 +47,40 @@ export class AdMobService extends AdService {
 
   private rewardedReady = false;
   private rewardedLoading?: Promise<void>;
-  // Guards against a second tap starting a second rewarded flow (and thus a second grant)
-  // while one is already in flight — belt-and-suspenders alongside each caller's own
-  // "isProcessingAd" UI guard.
+  // Guards against duplicate taps triggering parallel rewarded ad flows
   private rewardInFlight = false;
 
   initialize(): Promise<void> {
     if (!this.isNative) return this.mock.initialize();
     if (!this.initPromise) {
-      this.initPromise = AdMob.initialize({ initializeForTesting: !environment.production })
-        .then(() => {
+      this.initPromise = (async () => {
+        try {
+          this.log(`Initializing Mobile Ads SDK (Production: ${environment.production})`);
+
+          // 1. Google UMP Consent Flow (Required for EEA/UK compliance)
+          try {
+            const consentInfo = await AdMob.requestConsentInfo();
+            this.log('UMP consent status:', consentInfo.status, 'form available:', consentInfo.isConsentFormAvailable);
+
+            if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
+              await AdMob.showConsentForm();
+              this.log('UMP consent form completed by user.');
+            }
+          } catch (consentErr) {
+            this.log('UMP consent check skipped or unavailable:', consentErr);
+          }
+
+          // 2. Initialize AdMob with official testing mode flag based on build
+          await AdMob.initialize({ initializeForTesting: !environment.production });
+          this.log('AdMob SDK initialized successfully.');
+
+          // 3. Preload initial full-screen ads in background for instant readiness
           void this.preloadInterstitial();
           void this.preloadRewarded();
-        })
-        .catch(() => {
-          // Initialization failure (e.g. no Play Services) leaves every ad call below to
-          // fail its own preload/show attempt gracefully rather than throwing here.
-        });
+        } catch (err) {
+          this.log('AdMob initialization error:', err);
+        }
+      })();
     }
     return this.initPromise;
   }
@@ -74,18 +95,22 @@ export class AdMobService extends AdService {
       return { granted: false, reason: 'An ad is already in progress.' };
     }
     this.rewardInFlight = true;
+    this.music.pause();
 
     try {
       await this.initialize();
       if (!this.rewardedReady) {
+        this.log('Rewarded ad not preloaded, attempting just-in-time load...');
         await Promise.race([this.preloadRewarded(), this.timeout()]);
       }
       if (!this.rewardedReady) {
+        this.log('Rewarded ad unavailable at show time.');
         return { granted: false, reason: 'No ad is available right now. Please try again shortly.' };
       }
 
       this.rewardedReady = false;
       const granted = await this.awaitRewardConfirmation();
+
       // Reset cooldown and counter: user just watched a rewarded ad, so never follow up with an interstitial
       this.lastFullScreenAdTime = Date.now();
       this.roundsSinceInterstitial = 0;
@@ -94,6 +119,7 @@ export class AdMobService extends AdService {
       return granted ? { granted: true } : { granted: false, reason: 'Ad was closed before it finished.' };
     } finally {
       this.rewardInFlight = false;
+      this.music.resume();
     }
   }
 
@@ -103,16 +129,22 @@ export class AdMobService extends AdService {
 
     await this.initialize();
     if (!this.interstitialReady) {
+      this.log('Interstitial not preloaded, attempting just-in-time load...');
       await Promise.race([this.preloadInterstitial(), this.timeout()]);
     }
-    if (!this.interstitialReady) return;
+    if (!this.interstitialReady) {
+      this.log('Interstitial ad not ready, skipping breakpoint cleanly.');
+      return;
+    }
 
     this.interstitialReady = false;
     this.lastFullScreenAdTime = Date.now();
+    this.music.pause();
     try {
       await this.awaitInterstitialDismissal();
     } finally {
       this.lastFullScreenAdTime = Date.now();
+      this.music.resume();
       void this.preloadInterstitial();
     }
   }
@@ -123,11 +155,18 @@ export class AdMobService extends AdService {
     this.roundsSinceInterstitial++;
 
     // 1. Must satisfy rounds interval threshold (e.g. every 3 levels)
-    if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) return;
+    if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) {
+      this.log(`Interstitial skipped: round ${this.roundsSinceInterstitial}/${environment.ads.interstitialLevelInterval}`);
+      return;
+    }
 
     // 2. Must satisfy time cooldown (at least 75 seconds between full-screen ads)
     const now = Date.now();
-    if (now - this.lastFullScreenAdTime < this.MIN_INTERSTITIAL_COOLDOWN_MS) return;
+    const elapsedSinceLastAd = now - this.lastFullScreenAdTime;
+    if (elapsedSinceLastAd < this.MIN_INTERSTITIAL_COOLDOWN_MS) {
+      this.log(`Interstitial skipped: cooldown active (${Math.round((this.MIN_INTERSTITIAL_COOLDOWN_MS - elapsedSinceLastAd) / 1000)}s remaining)`);
+      return;
+    }
 
     this.roundsSinceInterstitial = 0;
     this.lastFullScreenAdTime = now;
@@ -138,8 +177,9 @@ export class AdMobService extends AdService {
     if (!environment.features.bannerAdsEnabled) return;
     if (!this.isNative) return this.mock.showBanner();
 
+    this.bannerPendingHide = false;
     await this.initialize();
-    if (this.bannerVisible) return;
+    if (this.bannerVisible || this.bannerPendingHide) return;
 
     const options: BannerAdOptions = {
       adId: AD_UNIT_IDS.banner,
@@ -148,25 +188,43 @@ export class AdMobService extends AdService {
     };
 
     try {
-      this.bannerVisible = true;
-      await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
-        this.bannerVisible = false;
-      });
+      if (!this.bannerListenersRegistered) {
+        this.bannerListenersRegistered = true;
+        await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (err) => {
+          this.log('Banner failed to load:', err);
+          this.bannerVisible = false;
+        });
+        await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+          this.log('Banner loaded successfully.');
+          this.bannerVisible = true;
+        });
+      }
+
       await AdMob.showBanner(options);
-    } catch {
+      if (this.bannerPendingHide) {
+        await AdMob.removeBanner();
+        this.bannerVisible = false;
+      } else {
+        this.bannerVisible = true;
+        this.log('Banner displayed.');
+      }
+    } catch (err) {
+      this.log('Error showing banner:', err);
       this.bannerVisible = false;
     }
   }
 
   async hideBanner(): Promise<void> {
     if (!this.isNative) return this.mock.hideBanner();
+    this.bannerPendingHide = true;
     if (!this.bannerVisible) return;
 
     this.bannerVisible = false;
     try {
       await AdMob.removeBanner();
-    } catch {
-      // Nothing to clean up if the native banner never actually loaded.
+      this.log('Banner hidden.');
+    } catch (err) {
+      this.log('Error removing banner:', err);
     }
   }
 
@@ -175,10 +233,14 @@ export class AdMobService extends AdService {
 
     this.interstitialLoading = (async () => {
       try {
-        await AdMob.prepareInterstitial({ adId: AD_UNIT_IDS.interstitial });
+        const adId = AD_UNIT_IDS.interstitial;
+        this.log('Preloading interstitial with adId:', adId);
+        await AdMob.prepareInterstitial({ adId });
         this.interstitialReady = true;
-      } catch {
+        this.log('Interstitial ready.');
+      } catch (err) {
         this.interstitialReady = false;
+        this.log('Interstitial preload failed:', err);
       } finally {
         this.interstitialLoading = undefined;
       }
@@ -192,10 +254,14 @@ export class AdMobService extends AdService {
 
     this.rewardedLoading = (async () => {
       try {
-        await AdMob.prepareRewardVideoAd({ adId: AD_UNIT_IDS.rewarded });
+        const adId = AD_UNIT_IDS.rewarded;
+        this.log('Preloading rewarded ad with adId:', adId);
+        await AdMob.prepareRewardVideoAd({ adId });
         this.rewardedReady = true;
-      } catch {
+        this.log('Rewarded ad ready.');
+      } catch (err) {
         this.rewardedReady = false;
+        this.log('Rewarded preload failed:', err);
       } finally {
         this.rewardedLoading = undefined;
       }
@@ -207,30 +273,71 @@ export class AdMobService extends AdService {
   /**
    * Resolves true ONLY once AdMob confirms the reward was actually earned — either via the
    * plugin's own `showRewardVideoAd()` promise (which resolves with the earned reward) or
-   * the `Rewarded` event, whichever arrives first. The user backing out early fires
-   * `Dismissed` (no `Rewarded` first) or `FailedToShow`, both of which resolve false rather
-   * than leaving the caller hanging. This is the one method every coin/reward grant in the
-   * app must gate on — never grant from a button tap or the ad merely starting.
+   * the `Rewarded` event, whichever arrives first.
+   *
+   * A dismissal timer ensures dismissal events cannot prematurely discard a confirmed reward.
    */
   private awaitRewardConfirmation(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
+      let rewardEarned = false;
       let settled = false;
+      let dismissalTimer: ReturnType<typeof setTimeout> | null = null;
       const handles: Promise<PluginListenerHandle>[] = [];
-      const cleanup = () => handles.forEach((h) => h.then((handle) => handle.remove()).catch(() => {}));
+      const cleanup = () => {
+        if (dismissalTimer !== null) clearTimeout(dismissalTimer);
+        handles.forEach((h) => h.then((handle) => handle.remove()).catch(() => {}));
+      };
       const finish = (granted: boolean) => {
         if (settled) return;
         settled = true;
         cleanup();
+        this.log('Reward flow finished, granted:', granted);
         resolve(granted);
       };
 
-      handles.push(AdMob.addListener(RewardAdPluginEvents.Rewarded, () => finish(true)));
-      handles.push(AdMob.addListener(RewardAdPluginEvents.Dismissed, () => finish(false)));
-      handles.push(AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => finish(false)));
+      // 1. Explicit rewarded event from plugin listener
+      handles.push(
+        AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+          this.log('RewardAdPluginEvents.Rewarded received.');
+          rewardEarned = true;
+          finish(true);
+        }),
+      );
 
+      // 2. Plugin call promise resolution
       AdMob.showRewardVideoAd()
-        .then(() => finish(true))
-        .catch(() => finish(false));
+        .then(() => {
+          this.log('showRewardVideoAd promise resolved successfully.');
+          rewardEarned = true;
+          finish(true);
+        })
+        .catch((err) => {
+          this.log('showRewardVideoAd promise error:', err);
+          if (!rewardEarned) finish(false);
+        });
+
+      // 3. Ad dismissed / closed by user
+      handles.push(
+        AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+          this.log('RewardAdPluginEvents.Dismissed received. rewardEarned:', rewardEarned);
+          if (rewardEarned) {
+            finish(true);
+          } else {
+            // Give 300ms grace period in case Rewarded event arrives right around dismissal
+            dismissalTimer = setTimeout(() => {
+              finish(rewardEarned);
+            }, 300);
+          }
+        }),
+      );
+
+      // 4. Failed to show
+      handles.push(
+        AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
+          this.log('RewardAdPluginEvents.FailedToShow received:', err);
+          if (!rewardEarned) finish(false);
+        }),
+      );
     });
   }
 
@@ -255,5 +362,11 @@ export class AdMobService extends AdService {
 
   private timeout(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, AD_LOAD_TIMEOUT_MS));
+  }
+
+  private log(...args: unknown[]): void {
+    if (!environment.production || (environment as { debug?: boolean }).debug) {
+      console.log('[AdMob]', ...args);
+    }
   }
 }
