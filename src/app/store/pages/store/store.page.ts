@@ -34,16 +34,14 @@ export class StorePage implements OnInit {
   readonly purchasingType = signal<PowerUpType | null>(null);
   readonly insufficientFundsFor = signal<PowerUpType | null>(null);
 
-  readonly adRewardAvailable = environment.features.rewardedAdsEnabled;
-  readonly watchAdCoins = signal(0);
+  readonly adRewardAvailable = environment.features.adsEnabled && environment.features.rewardedAdsEnabled;
   readonly isWatchingAd = signal(false);
-  readonly adFailedMessage = signal<string | null>(null);
+  readonly adMessage = signal<string | null>(null);
+  readonly adError = signal(false);
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.powerupService.init(), this.coinService.init()]);
     const powerUpConfig: PowerUpConfig = await this.config.getPowerUpConfig();
-    const rewardConfig = await this.config.getRewardConfig();
-    this.watchAdCoins.set(rewardConfig.watchAdRewardCoins);
 
     this.items.set([
       { type: 'HINT', label: 'Hint', icon: 'bulb', cost: powerUpConfig.storeCosts.HINT },
@@ -70,18 +68,20 @@ export class StorePage implements OnInit {
     void this.router.navigateByUrl('/themes');
   }
 
-  async onWatchAdForCoins(): Promise<void> {
+  async onWatchAdForHint(): Promise<void> {
     if (this.isWatchingAd()) return; // prevent double-tap / overlapping ad requests
-    this.adFailedMessage.set(null);
+    this.adMessage.set(null);
+    this.adError.set(false);
     this.isWatchingAd.set(true);
 
     try {
       const result = await this.adService.showRewardedAd();
       if (result.granted) {
-        // Only ever credited from a confirmed AdMob reward callback — never on tap or ad start.
-        await this.coinService.addCoins(this.watchAdCoins(), 'AD_REWARD', 'store_watch_ad');
+        await this.powerupService.grant('HINT', 1);
+        this.adMessage.set('+1 Hint added. Use it in your next puzzle.');
       } else {
-        this.adFailedMessage.set(result.reason ?? 'Ad not available right now.');
+        this.adError.set(true);
+        this.adMessage.set(result.reason ?? 'Ad not available right now.');
       }
     } finally {
       this.isWatchingAd.set(false);

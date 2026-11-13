@@ -79,3 +79,21 @@ ion-content::part(scroll)::-webkit-scrollbar {
   display: none;
 }
 
+button, a, input, ion-button { touch-action: manipulation; }
+
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 3px solid var(--ar-gold);
+  outline-offset: 4px;
+}
+
+button:disabled { cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

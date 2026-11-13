@@ -1,6 +1,13 @@
+import { signal } from '@angular/core';
+
 export interface RewardedAdResult {
   granted: boolean;
   reason?: string;
+}
+
+export interface InterstitialBreakpoint {
+  roundId: string;
+  canShow: () => boolean;
 }
 
 /**
@@ -13,24 +20,26 @@ export interface RewardedAdResult {
  * loading or showing.
  */
 export abstract class AdService {
+  protected readonly _bannerHeight = signal(0);
+  readonly bannerHeight = this._bannerHeight.asReadonly();
+  protected readonly _privacyOptionsRequired = signal(false);
+  readonly privacyOptionsRequired = this._privacyOptionsRequired.asReadonly();
+  protected readonly _fullScreenShowing = signal(false);
+  readonly fullScreenShowing = this._fullScreenShowing.asReadonly();
+
   /** Boots the underlying ad SDK and starts preloading interstitial/rewarded ads.
    * Safe to call multiple times — implementations memoize the underlying init call.
    * Call once, as early as possible (app boot), so ads are already loaded by the time a
    * screen wants to show one. */
   abstract initialize(): Promise<void>;
 
-  abstract showRewardedAd(): Promise<RewardedAdResult>;
+  abstract showRewardedAd(canShow?: () => boolean): Promise<RewardedAdResult>;
 
-  /** Always shows an interstitial (subject to one loading in time), for a deliberate
-   * one-off breakpoint. Prefer `maybeShowInterstitialAtBreakpoint` for a spot the player
-   * revisits constantly, so interstitials stay frequency-capped. */
-  abstract showInterstitialAd(): Promise<void>;
+  /** Call once per finished round, before result-screen navigation buttons are shown. */
+  abstract maybeShowInterstitialAtBreakpoint(breakpoint: InterstitialBreakpoint): Promise<void>;
 
-  /** Call at a natural "leaving a finished/failed round" breakpoint. Shows an interstitial
-   * only once every `environment.ads.interstitialLevelInterval` calls, so a spot the player
-   * revisits constantly (e.g. every level completion) doesn't breach AdMob's full-screen-ad
-   * frequency policies. */
-  abstract maybeShowInterstitialAtBreakpoint(): Promise<void>;
+  abstract setScreen(path: string): void;
+  abstract showPrivacyOptions(): Promise<boolean>;
 
   abstract showBanner(): Promise<void>;
   abstract hideBanner(): Promise<void>;

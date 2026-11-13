@@ -25,8 +25,8 @@
 }
 
 .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--ar-surface);
   border: 1px solid var(--ar-border);
@@ -53,6 +53,7 @@
   font-weight: 700;
   color: var(--ar-text);
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
 
   &.low {
     color: var(--ion-color-danger);

@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
   ArrowBlock,
-  Cell,
   GameState,
   GameStateSnapshot,
   LevelData,
@@ -48,22 +47,22 @@ export class GameEngineService {
     return this.validator.canMove(state, blockId);
   }
 
-  calculatePath(state: GameState, blockId: string): Cell[] {
-    const block = state.blocks.find((b) => b.id === blockId);
-    if (!block) return [];
-    return this.validator.calculatePath(state, block);
-  }
-
   /** Attempts to move a block. Returns a new state on success; on a blocked move the state
    * is unchanged (caller drives the "blocked" shake/sound feedback off `blocked: true`). */
   moveBlock(state: GameState, blockId: string): MoveResult {
+    if (state.isComplete || state.isFailed) {
+      return { moved: false, blocked: false, path: [], escaped: false, state };
+    }
     const block = state.blocks.find((b) => b.id === blockId);
     if (!block) {
       return { moved: false, blocked: false, path: [], escaped: false, state };
     }
 
     const path = this.validator.calculatePath(state, block);
-    const clear = this.validator.canMove(state, blockId);
+    // Reuse the path and occupancy data for this move instead of rebuilding both.
+    const occupied = this.validator.getOccupiedCellSet(state);
+    occupied.delete(`${block.row}:${block.column}`);
+    const clear = this.validator.isPathClear(path, occupied);
 
     if (!clear) {
       const livesRemaining = Math.max(0, state.livesRemaining - 1);
@@ -115,15 +114,19 @@ export class GameEngineService {
   /** First block (if any) that can currently escape — used to drive the Hint power-up. */
   getHintBlockId(state: GameState): string | null {
     const occupied = this.validator.getOccupiedCellSet(state);
-    const movable = state.blocks.filter((b) => this.validator.canMoveWithOccupied(state, b, occupied));
-    if (movable.length === 0) return null;
-    // Prefer the block requiring the shortest exit path — usually the most "obvious" next move.
-    movable.sort((a, b) => {
-      const pathA = this.validator.calculatePath(state, a).length;
-      const pathB = this.validator.calculatePath(state, b).length;
-      return pathA - pathB;
-    });
-    return movable[0].id;
+    let closest: ArrowBlock | null = null;
+    let shortest = Infinity;
+    for (const block of state.blocks) {
+      const distance = block.direction === 'UP' ? block.row
+        : block.direction === 'DOWN' ? state.rows - block.row - 1
+        : block.direction === 'LEFT' ? block.column : state.columns - block.column - 1;
+      if (distance < shortest && this.validator.canMoveWithOccupied(state, block, occupied)) {
+        closest = block;
+        shortest = distance;
+        if (distance === 0) break;
+      }
+    }
+    return closest?.id ?? null;
   }
 
   hasAnyMove(state: GameState): boolean {

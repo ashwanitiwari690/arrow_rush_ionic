@@ -41,12 +41,14 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) state!: GameState;
   @Input() hintedBlockId: string | null = null;
   @Input() blocked: BlockedFeedback | null = null;
+  @Input() sessionId = 0;
+  @Input() disabled = false;
 
   @Output() blockTap = new EventEmitter<string>();
 
   private readonly cdr = inject(ChangeDetectorRef);
 
-  cellIndices: number[] = [];
+  cells: { row: number; column: number }[] = [];
   ghosts: Ghost[] = [];
   shakingBlockId: string | null = null;
 
@@ -55,6 +57,13 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
   private cachedGridSize = '';
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['sessionId']) {
+      for (const timer of this.timers) clearTimeout(timer);
+      this.timers.clear();
+      this.ghosts = [];
+      this.previousBlocks = [];
+      this.shakingBlockId = null;
+    }
     if (changes['state'] && this.state) {
       this.updateCellIndices();
       this.diffForEscapes();
@@ -69,7 +78,7 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
   }
 
   onTap(blockId: string): void {
-    this.blockTap.emit(blockId);
+    if (!this.disabled) this.blockTap.emit(blockId);
   }
 
   private updateCellIndices(): void {
@@ -77,15 +86,22 @@ export class GameBoardComponent implements OnChanges, OnDestroy {
     if (this.cachedGridSize !== sizeKey) {
       this.cachedGridSize = sizeKey;
       const count = this.state.rows * this.state.columns;
-      this.cellIndices = Array.from({ length: count }, (_, i) => i);
+      this.cells = Array.from({ length: count }, (_, i) => ({
+        row: Math.floor(i / this.state.columns) + 1,
+        column: i % this.state.columns + 1,
+      }));
     }
   }
 
   private diffForEscapes(): void {
+    // A blocked tap changes lives but preserves the block array.
+    if (this.previousBlocks === this.state.blocks) return;
+
     const currentIds = new Set(this.state.blocks.map((b) => b.id));
     const removed = this.previousBlocks.filter((b) => !currentIds.has(b.id));
 
     for (const block of removed) {
+      if (!this.state.escapedBlockIds.includes(block.id)) continue;
       const key = `${block.id}-${Date.now()}`;
       this.ghosts = [...this.ghosts, { key, block }];
       const timer = setTimeout(() => {

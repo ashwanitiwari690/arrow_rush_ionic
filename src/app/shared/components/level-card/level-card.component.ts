@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { IonIcon } from '@ionic/angular/ion-icon';
 import { LevelSummary } from '../../../core/models/game.models';
 import { LevelProgress } from '../../../core/models/economy.models';
 
@@ -6,7 +7,8 @@ import { LevelProgress } from '../../../core/models/economy.models';
   selector: 'app-level-card',
   templateUrl: './level-card.component.html',
   styleUrls: ['./level-card.component.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [IonIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LevelCardComponent {

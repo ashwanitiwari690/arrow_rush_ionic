@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { CoinService } from './coin.service';
 import { ConfigService } from './config.service';
 import { StorageService } from './storage.service';
+import { environment } from '../../../environments/environment';
 
 class FakeStorageService {
   private store = new Map<string, unknown>();
@@ -84,5 +85,14 @@ describe('CoinService', () => {
     await service.confirmRedemption(1000);
 
     expect(service.balance()).toBe(0);
+  });
+
+  it('rejects rewarded-ad coins when the balance supports monetary redemption', async () => {
+    const previous = environment.features.redemptionEnabled;
+    environment.features.redemptionEnabled = true;
+    try {
+      await expect(service.addCoins(50, 'AD_REWARD', 'store_watch_ad')).rejects.toThrow('cash-redeemable');
+      expect(service.balance()).toBe(0);
+    } finally { environment.features.redemptionEnabled = previous; }
   });
 });

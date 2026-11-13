@@ -1,4 +1,19 @@
 <ion-content [fullscreen]="true" class="game-play-content">
+  @if (isLoading()) {
+    <div class="load-state" role="status">
+      <ion-spinner name="crescent"></ion-spinner>
+      <h1>Getting your puzzle ready</h1>
+      <p>A clear path is all it takes.</p>
+    </div>
+  } @else if (loadError()) {
+    <div class="load-state" role="alert">
+      <ion-icon name="refresh-outline"></ion-icon>
+      <h1>Couldn't load this puzzle</h1>
+      <p>Try again to get back to your game.</p>
+      <ion-button (click)="onRetryLoad()">Try again</ion-button>
+      <ion-button fill="clear" (click)="onHomeTap()">Back to home</ion-button>
+    </div>
+  }
   @if (level(); as lvl) {
     <div class="game-play-layout">
       <app-game-header
@@ -11,18 +26,22 @@
         (homeTap)="onHomeTap()"
       ></app-game-header>
 
-      <div class="board-wrap">
+      <div class="board-wrap" [attr.inert]="isPaused() || isGameOver() || gameStateService.isComplete() ? '' : null">
         @if (gameStateService.state(); as state) {
           <app-game-board
             [state]="state"
             [hintedBlockId]="hintedBlockId()"
             [blocked]="blockedFeedback()"
+            [sessionId]="sessionId()"
+            [disabled]="isUsingPowerUp() || !!adLoadingPowerUp() || isPaused() || isGameOver() || gameStateService.isComplete()"
             (blockTap)="onBlockTap($event)"
           ></app-game-board>
         }
       </div>
 
-      <div class="power-up-bar">
+      <p class="play-guidance" aria-live="polite">{{ feedbackText() }}</p>
+
+      <div class="power-up-bar" [attr.inert]="isPaused() || isGameOver() || gameStateService.isComplete() ? '' : null">
         <app-power-up-button
           icon="bulb"
           label="Hint"
@@ -30,6 +49,7 @@
           [count]="powerUpCounts().HINT"
           [adAvailable]="adRewardAvailable"
           [isLoadingAd]="adLoadingPowerUp() === 'HINT'"
+          [disabled]="isUsingPowerUp() || !!adLoadingPowerUp()"
           (activate)="onPowerUp('HINT')"
         ></app-power-up-button>
         <app-power-up-button
@@ -39,6 +59,7 @@
           [count]="powerUpCounts().UNDO"
           [adAvailable]="adRewardAvailable"
           [isLoadingAd]="adLoadingPowerUp() === 'UNDO'"
+          [disabled]="isUsingPowerUp() || !!adLoadingPowerUp() || !gameStateService.state()?.history?.length"
           (activate)="onPowerUp('UNDO')"
         ></app-power-up-button>
         <app-power-up-button
@@ -48,15 +69,17 @@
           [count]="powerUpCounts().SHUFFLE"
           [adAvailable]="adRewardAvailable"
           [isLoadingAd]="adLoadingPowerUp() === 'SHUFFLE'"
+          [disabled]="isUsingPowerUp() || !!adLoadingPowerUp()"
           (activate)="onPowerUp('SHUFFLE')"
         ></app-power-up-button>
         <app-power-up-button
           icon="flash"
-          label="Extra"
+          label="+15 sec"
           accent="extra"
           [count]="powerUpCounts().EXTRA"
           [adAvailable]="adRewardAvailable"
           [isLoadingAd]="adLoadingPowerUp() === 'EXTRA'"
+          [disabled]="isUsingPowerUp() || !!adLoadingPowerUp()"
           (activate)="onPowerUp('EXTRA')"
         ></app-power-up-button>
       </div>
@@ -72,26 +95,34 @@
     ></app-pause-panel>
   }
 
-  @if (gameStateService.isComplete()) {
+  @if (roundBreakPending()) {
+    <div class="round-break" role="status">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>{{ gameStateService.isComplete() ? 'Level complete!' : 'Round finished' }}</p>
+      <span>Please wait a moment…</span>
+    </div>
+  }
+
+  @if (!isLoading() && !roundBreakPending() && level() && gameStateService.isComplete()) {
     <app-level-complete-panel
-      [score]="gameStateService.state()?.score ?? 0"
+      [score]="finalScore()"
       [coinsEarned]="coinsEarned()"
       [timeSeconds]="timer.elapsedSeconds()"
       [stars]="starsEarned()"
       [hasNextLevel]="hasNextLevel"
       [isDailyChallenge]="isDailyChallenge"
       [adAvailable]="adRewardAvailable"
-      [isProcessingAd]="isProcessingAd() || isNavigating()"
-      [coinsDoubled]="doubledCoins()"
+      [isProcessingAd]="isProcessingAd() || isNavigating() || isCompleting()"
+      [hintClaimed]="hintRewardClaimed()"
       (nextLevel)="onNextLevel()"
       (replay)="onReplay()"
       (levelMap)="onLevelMap()"
       (dailyComplete)="onDailyComplete()"
-      (watchAdForDoubleCoins)="onWatchAdForDoubleCoins()"
+      (watchAdForHint)="onWatchAdForHint()"
     ></app-level-complete-panel>
   }
 
-  @if (isGameOver()) {
+  @if (isGameOver() && !roundBreakPending()) {
     <app-game-over-panel
       [isDailyChallenge]="isDailyChallenge"
       [adAvailable]="adRewardAvailable"

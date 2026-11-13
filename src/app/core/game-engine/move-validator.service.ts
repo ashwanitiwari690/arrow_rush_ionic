@@ -35,14 +35,23 @@ export class MoveValidatorService {
     const block = state.blocks.find((b) => b.id === blockId);
     if (!block) return false;
 
-    const path = this.calculatePath(state, block);
-    const occupied = this.occupiedCellSet(state, blockId);
-
-    return path.every((cell) => !occupied.has(this.cellKey(cell)));
+    return this.canMoveWithOccupied(state, block, this.getOccupiedCellSet(state));
   }
 
-  canMoveWithOccupied(state: GameState, block: ArrowBlock, occupied: Set<string>): boolean {
-    const path = this.calculatePath(state, block);
+  canMoveWithOccupied(state: GameState, block: Pick<ArrowBlock, 'row' | 'column' | 'direction'>, occupied: Set<string>): boolean {
+    // Scan directly: hints and dead-end checks don't need an allocated Cell[] per arrow.
+    const delta = this.directionDelta(block.direction);
+    let row = block.row + delta.row;
+    let column = block.column + delta.column;
+    while (row >= 0 && row < state.rows && column >= 0 && column < state.columns) {
+      if (occupied.has(`${row}:${column}`)) return false;
+      row += delta.row;
+      column += delta.column;
+    }
+    return true;
+  }
+
+  isPathClear(path: Cell[], occupied: Set<string>): boolean {
     return path.every((cell) => !occupied.has(this.cellKey(cell)));
   }
 
@@ -50,17 +59,6 @@ export class MoveValidatorService {
     const occupied = new Set<string>();
     for (const b of state.blocks) {
       occupied.add(this.cellKey(b));
-    }
-    for (const o of state.obstacles) {
-      occupied.add(this.cellKey(o));
-    }
-    return occupied;
-  }
-
-  private occupiedCellSet(state: GameState, excludeBlockId: string): Set<string> {
-    const occupied = new Set<string>();
-    for (const b of state.blocks) {
-      if (b.id !== excludeBlockId) occupied.add(this.cellKey(b));
     }
     for (const o of state.obstacles) {
       occupied.add(this.cellKey(o));

@@ -17,23 +17,31 @@ export class GameTimerService {
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private onExpire: (() => void) | null = null;
+  private remainingMs = 0;
+  private elapsedMs = 0;
+  private lastTick = 0;
 
   start(totalSeconds: number, onExpire: () => void): void {
     this.stop();
     this._remainingSeconds.set(totalSeconds);
     this._elapsedSeconds.set(0);
+    this.remainingMs = totalSeconds * 1000;
+    this.elapsedMs = 0;
     this.onExpire = onExpire;
     this.resume();
   }
 
   resume(): void {
-    if (this.intervalId !== null) return;
+    if (this.intervalId !== null || !this.onExpire) return;
+    if (this.remainingMs <= 0) { this.expire(); return; }
+    this.lastTick = performance.now();
     this._isRunning.set(true);
     this.intervalId = setInterval(() => this.tick(), 1000);
   }
 
   pause(): void {
     if (this.intervalId !== null) {
+      this.updateClock();
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
@@ -46,20 +54,35 @@ export class GameTimerService {
   }
 
   addSeconds(seconds: number): void {
-    this._remainingSeconds.set(this._remainingSeconds() + seconds);
+    if (this._isRunning()) this.updateClock();
+    this.remainingMs += Math.max(0, seconds) * 1000;
+    this._remainingSeconds.set(Math.ceil(this.remainingMs / 1000));
   }
 
   private tick(): void {
-    this._elapsedSeconds.set(this._elapsedSeconds() + 1);
-    const remaining = this._remainingSeconds() - 1;
+    this.updateClock();
+    const remaining = this._remainingSeconds();
 
     if (remaining <= 0) {
       this._remainingSeconds.set(0);
-      this.pause();
-      this.onExpire?.();
-      return;
+      this.expire();
     }
+  }
 
-    this._remainingSeconds.set(remaining);
+  private expire(): void {
+    this.pause();
+    const callback = this.onExpire;
+    this.onExpire = null;
+    callback?.();
+  }
+
+  private updateClock(): void {
+    const now = performance.now();
+    const delta = Math.min(this.remainingMs, Math.max(0, now - this.lastTick));
+    this.lastTick = now;
+    this.remainingMs = Math.max(0, this.remainingMs - delta);
+    this.elapsedMs += delta;
+    this._remainingSeconds.set(Math.ceil(this.remainingMs / 1000));
+    this._elapsedSeconds.set(Math.floor(this.elapsedMs / 1000));
   }
 }

@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { CoinTransaction, CoinTransactionType } from '../models/economy.models';
 import { StorageService } from './storage.service';
 import { ConfigService } from './config.service';
+import { environment } from '../../../environments/environment';
 
 const COIN_BALANCE_KEY = 'arrow_rush.coin_balance';
 const COIN_HISTORY_KEY = 'arrow_rush.coin_history';
@@ -50,6 +51,9 @@ export class CoinService {
 
   async addCoins(amount: number, type: CoinTransactionType, source: string, levelId?: number): Promise<void> {
     if (amount <= 0) return;
+    if (type === 'AD_REWARD' && environment.features.redemptionEnabled) {
+      throw new Error('Rewarded ads cannot award cash-redeemable coins. Grant a game-only item instead.');
+    }
     await this.init();
 
     this._balance.set(this._balance() + amount);

@@ -1,7 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { AlertController } from '@ionic/angular/alert-controller';
+import { ToastController } from '@ionic/angular/toast-controller';
 import { App } from '@capacitor/app';
-import { SettingsService, AppLanguage } from '../../../core/services/settings.service';
+import { SettingsService } from '../../../core/services/settings.service';
+import { SoundService } from '../../../core/services/sound.service';
+import { MusicService } from '../../../core/services/music.service';
+import { AdService } from '../../../core/services/ad.service';
 import { LevelService } from '../../../core/services/level.service';
 import { environment } from '../../../../environments/environment';
 
@@ -14,12 +18,17 @@ import { environment } from '../../../../environments/environment';
 })
 export class SettingsPage implements OnInit {
   private readonly settingsService = inject(SettingsService);
+  private readonly sound = inject(SoundService);
+  private readonly music = inject(MusicService);
+  private readonly ads = inject(AdService);
   private readonly levelService = inject(LevelService);
   private readonly alertController = inject(AlertController);
   private readonly toastController = inject(ToastController);
 
   readonly settings = this.settingsService.settings;
   readonly appVersion = signal<string>(environment.appVersion ?? '1.0.0');
+  readonly privacyOptionsRequired = this.ads.privacyOptionsRequired;
+  readonly openingPrivacyOptions = signal(false);
 
   async ngOnInit(): Promise<void> {
     await this.settingsService.init();
@@ -41,9 +50,25 @@ export class SettingsPage implements OnInit {
     void this.settingsService.update({ [key]: !this.settings()[key] });
   }
 
-  setLanguage(language: string | number | undefined): void {
-    if (language !== 'en' && language !== 'hi') return;
-    void this.settingsService.update({ language: language as AppLanguage });
+  setVolume(key: 'soundVolume' | 'musicVolume', event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value) / 100;
+    void this.settingsService.update({ [key]: value });
+  }
+
+  previewSound(): void {
+    this.music.unlock();
+    this.sound.play('levelComplete');
+  }
+
+  async openAdPrivacyOptions(): Promise<void> {
+    if (this.openingPrivacyOptions()) return;
+    this.openingPrivacyOptions.set(true);
+    try {
+      if (!await this.ads.showPrivacyOptions()) {
+        const toast = await this.toastController.create({ message: 'Privacy options are not available right now. Please try again later.', duration: 2500 });
+        await toast.present();
+      }
+    } finally { this.openingPrivacyOptions.set(false); }
   }
 
   async confirmResetLevels(): Promise<void> {

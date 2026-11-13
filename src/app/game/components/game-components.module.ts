@@ -1,8 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular/lazy';
+import { IonButton } from '@ionic/angular/ion-button';
+import { IonIcon } from '@ionic/angular/ion-icon';
 
-import { SharedModule } from '../../shared/shared.module';
+import { CoinBalanceComponent } from '../../shared/components/coin-balance/coin-balance.component';
+import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 import { GameBoardComponent } from './game-board/game-board.component';
 import { ArrowBlockComponent } from './arrow-block/arrow-block.component';
 import { ObstacleTileComponent } from './obstacle-tile/obstacle-tile.component';
@@ -24,7 +26,7 @@ const COMPONENTS = [
 ];
 
 @NgModule({
-  imports: [CommonModule, IonicModule, SharedModule],
+  imports: [CommonModule, IonButton, IonIcon, CoinBalanceComponent, CoinIconComponent],
   declarations: COMPONENTS,
   exports: COMPONENTS,
 })

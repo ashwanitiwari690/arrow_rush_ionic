@@ -14,10 +14,6 @@ export class ScoreService {
     Object.values(this.levelService.progress()).reduce((sum, p) => sum + p.bestScore, 0),
   );
 
-  readonly bestLevelScore = computed(() =>
-    Object.values(this.levelService.progress()).reduce((max, p) => Math.max(max, p.bestScore), 0),
-  );
-
   async calculateStars(actualMoves: number, idealMoves: number): Promise<number> {
     const { starThresholds } = await this.config.getRewardConfig();
     if (idealMoves <= 0) return 3;

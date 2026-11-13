@@ -1,64 +1,26 @@
-import { Injectable, inject } from '@angular/core';
-import { AdService, RewardedAdResult } from './ad.service';
+import { Injectable } from '@angular/core';
+import { AdService, InterstitialBreakpoint, RewardedAdResult } from './ad.service';
+import { BANNER_SCREENS } from '../config/admob.config';
 import { environment } from '../../../environments/environment';
 
-/**
- * Development/offline stand-in for AdMob. Simulates realistic load + watch latency and
- * always resolves the reward from a single "confirmed" point, matching the shape a real
- * AdMob `RewardedAdOptions` completion callback would have — so swapping in a real
- * AdMobService later is a drop-in replacement with no caller changes.
- */
+/** Development-only reward simulation. Production web previews never award mock rewards. */
 @Injectable({ providedIn: 'root' })
 export class MockAdService extends AdService {
-  private roundsSinceInterstitial = 0;
-  private readonly MIN_INTERSTITIAL_COOLDOWN_MS = 75000;
-  private lastFullScreenAdTime = Date.now();
+  async initialize(): Promise<void> { /* No native SDK in browser previews. */ }
 
-  async initialize(): Promise<void> {
-    // Nothing to boot for the mock provider.
-  }
-
-  async showRewardedAd(): Promise<RewardedAdResult> {
-    if (!environment.features.rewardedAdsEnabled) {
-      return { granted: false, reason: 'Ads are disabled in this build.' };
+  async showRewardedAd(canShow: () => boolean = () => true): Promise<RewardedAdResult> {
+    if (environment.production || !environment.features.adsEnabled || !environment.features.rewardedAdsEnabled) {
+      return { granted: false, reason: 'Rewarded ads are available in the installed app.' };
     }
-
-    await this.delay(800);
-    this.lastFullScreenAdTime = Date.now();
-    this.roundsSinceInterstitial = 0;
-    // In dev, mock ads always succeed so gameplay flows can be exercised end to end.
-    return { granted: true };
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return canShow() ? { granted: true } : { granted: false, reason: 'Ad cancelled.' };
   }
 
-  async showInterstitialAd(): Promise<void> {
-    if (!environment.features.interstitialAdsEnabled) return;
-    this.lastFullScreenAdTime = Date.now();
-    await this.delay(400);
-    this.lastFullScreenAdTime = Date.now();
+  async maybeShowInterstitialAtBreakpoint(_breakpoint: InterstitialBreakpoint): Promise<void> { /* No live browser ads. */ }
+  setScreen(path: string): void {
+    this._bannerHeight.set(environment.features.adsEnabled && environment.features.bannerAdsEnabled && BANNER_SCREENS.has(path) ? 50 : 0);
   }
-
-  async maybeShowInterstitialAtBreakpoint(): Promise<void> {
-    if (!environment.features.interstitialAdsEnabled) return;
-    this.roundsSinceInterstitial++;
-    if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) return;
-
-    const now = Date.now();
-    if (now - this.lastFullScreenAdTime < this.MIN_INTERSTITIAL_COOLDOWN_MS) return;
-
-    this.roundsSinceInterstitial = 0;
-    this.lastFullScreenAdTime = now;
-    await this.showInterstitialAd();
-  }
-
-  async showBanner(): Promise<void> {
-    if (!environment.features.bannerAdsEnabled) return;
-  }
-
-  async hideBanner(): Promise<void> {
-    // no-op for the mock provider
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  async showBanner(): Promise<void> { /* Preview only. */ }
+  async hideBanner(): Promise<void> { this._bannerHeight.set(0); }
+  async showPrivacyOptions(): Promise<boolean> { return false; }
 }

@@ -24,8 +24,9 @@ export class DailyChallengePage implements OnInit {
   reward: RewardConfig['dailyChallengeReward'] = { coins: 0, score: 0 };
   isClaiming = false;
 
-  readonly adRewardAvailable = environment.features.rewardedAdsEnabled;
+  readonly adRewardAvailable = environment.features.adsEnabled && environment.features.rewardedAdsEnabled;
   readonly isWatchingAd = signal(false);
+  readonly adMessage = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
     await this.refreshData();
@@ -63,14 +64,18 @@ export class DailyChallengePage implements OnInit {
     return this.dailyChallengeService.attemptsRemaining();
   }
 
-  async onWatchAdToDouble(): Promise<void> {
-    if (this.isWatchingAd()) return; // prevent double-tap / overlapping ad requests
+  async onWatchAdForShuffle(): Promise<void> {
+    if (this.isWatchingAd() || !this.status()?.rewardClaimed || this.status()?.bonusClaimed) return;
+    this.adMessage.set(null);
     this.isWatchingAd.set(true);
 
     try {
       const result = await this.adService.showRewardedAd();
       if (result.granted) {
         await this.dailyChallengeService.claimAdBonus();
+        this.adMessage.set('+1 Shuffle added for your next puzzle.');
+      } else {
+        this.adMessage.set(result.reason ?? 'An ad is not available right now.');
       }
     } finally {
       this.isWatchingAd.set(false);

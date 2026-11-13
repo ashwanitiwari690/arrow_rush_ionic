@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-coin-icon',
   templateUrl: './coin-icon.component.html',
   styleUrls: ['./coin-icon.component.scss'],
-  standalone: false,
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CoinIconComponent {}

@@ -14,10 +14,12 @@ const routes: Routes = [
   },
   {
     path: 'level-map',
+    data: { preload: true },
     loadChildren: () => import('./levels/pages/level-map/level-map.module').then( m => m.LevelMapPageModule)
   },
   {
     path: 'game-play/:levelId',
+    data: { preload: true },
     loadChildren: () => import('./game/pages/game-play/game-play.module').then( m => m.GamePlayPageModule)
   },
   {

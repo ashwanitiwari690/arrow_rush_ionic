@@ -16,69 +16,74 @@
       </button>
     </div>
 
-    <div class="hero">
-      <div class="logo-mark" aria-hidden="true">
-        <img src="assets/icon/logo.png" alt="" />
-      </div>
-
-      <h1 class="ar-glow-text">ARROW RUSH</h1>
-      <p class="tagline">ESCAPE THE BLOCKS!</p>
-    </div>
-
-    <button type="button" class="progress-card" (click)="onProfile()">
-      <div class="progress-top">
-        <div class="progress-info">
-          <span class="greeting">{{ greeting }}</span>
-          <span class="level-label">Level {{ nextLevelId() }} <span class="of">/ {{ totalLevels }}</span></span>
+    <main class="home-main">
+      <div class="hero">
+        <div class="logo-mark" aria-hidden="true">
+          <img src="assets/icon/logo.png" width="128" height="128" alt="" />
         </div>
-        <div class="progress-stats">
-          <div class="stat">
-            <ion-icon name="checkmark-circle"></ion-icon>
-            <span>{{ completedCount() }}</span>
+
+        <h1 class="ar-glow-text">ARROW RUSH</h1>
+        <p class="tagline">A little focus. A clear escape.</p>
+      </div>
+
+      <button type="button" class="progress-card" (click)="onProfile()">
+        <div class="progress-top">
+          <div class="progress-info">
+            <span class="greeting">{{ greeting }}</span>
+            <span class="level-label">Level {{ nextLevelId() }} <span class="of">/ {{ totalLevels() || '…' }}</span></span>
           </div>
-          <div class="stat">
-            <ion-icon name="star"></ion-icon>
-            <span>{{ totalStars() }}</span>
+          <div class="progress-stats">
+            <div class="stat">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <span>{{ completedCount() }}</span>
+            </div>
+            <div class="stat">
+              <ion-icon name="star"></ion-icon>
+              <span>{{ totalStars() }}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" [style.width.%]="progressPercent()"></div>
-      </div>
-    </button>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+        </div>
+      </button>
 
-    <div class="menu">
-      <ion-button expand="block" color="primary" class="primary-cta" (click)="onPlay()">
-        <ion-icon slot="start" name="play"></ion-icon>
-        <span class="cta-text">
-          <span class="cta-title">PLAY</span>
-          <span class="cta-sub">Level {{ nextLevelId() }}</span>
-        </span>
-      </ion-button>
+      <div class="menu">
+        @if (loadError()) {
+          <p class="home-error" role="alert">Couldn't load your game. <button type="button" (click)="ngOnInit()">Try again</button></p>
+        }
+        <button type="button" class="primary-cta" [disabled]="!isReady()" [attr.aria-busy]="!isReady()" (click)="onPlay()">
+          <ion-icon name="play" aria-hidden="true"></ion-icon>
+          <span class="cta-text">
+            <span class="cta-title">{{ !isReady() ? 'Getting ready…' : completedCount() > 0 ? 'Continue playing' : 'Start playing' }}</span>
+            <span class="cta-sub">Your next puzzle · Level {{ nextLevelId() }}</span>
+          </span>
+          <ion-icon name="chevron-forward" class="cta-arrow" aria-hidden="true"></ion-icon>
+        </button>
 
-      <div class="menu-grid">
-        <ion-button expand="block" fill="outline" class="menu-btn daily-btn" (click)="onDailyChallenge()">
-          @if (dailyRewardReady()) {
-            <span class="badge-dot" aria-hidden="true"></span>
-          }
-          <ion-icon slot="start" name="calendar"></ion-icon>
-          DAILY
-        </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn levels-btn" (click)="onLevels()">
-          <ion-icon slot="start" name="grid"></ion-icon>
-          LEVELS
-        </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn store-btn" (click)="onStore()">
-          <ion-icon slot="start" name="storefront"></ion-icon>
-          STORE
-        </ion-button>
-        <ion-button expand="block" fill="outline" class="menu-btn profile-btn" (click)="onProfile()">
-          <ion-icon slot="start" name="person"></ion-icon>
-          PROFILE
-        </ion-button>
+        <div class="menu-grid">
+          <button type="button" class="menu-btn daily-btn" (click)="onDailyChallenge()">
+            @if (dailyRewardReady()) {
+              <span class="badge-dot" aria-hidden="true"></span>
+            }
+            <ion-icon name="calendar" aria-hidden="true"></ion-icon>
+            <span class="tile-text"><span class="tile-title">Daily challenge</span><small>{{ dailyRewardReady() ? 'Claim your reward' : 'A fresh puzzle daily' }}</small></span>
+          </button>
+          <button type="button" class="menu-btn levels-btn" (click)="onLevels()">
+            <ion-icon name="grid" aria-hidden="true"></ion-icon>
+            <span class="tile-text"><span class="tile-title">Level map</span><small>Choose your puzzle</small></span>
+          </button>
+          <button type="button" class="menu-btn store-btn" (click)="onStore()">
+            <ion-icon name="storefront" aria-hidden="true"></ion-icon>
+            <span class="tile-text"><span class="tile-title">Power-up store</span><small>Hints &amp; extra time</small></span>
+          </button>
+          <button type="button" class="menu-btn profile-btn" (click)="onProfile()">
+            <ion-icon name="person" aria-hidden="true"></ion-icon>
+            <span class="tile-text"><span class="tile-title">Your progress</span><small>Stars &amp; achievements</small></span>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <app-ad-banner></app-ad-banner>
+    </main>
   </div>
 </ion-content>

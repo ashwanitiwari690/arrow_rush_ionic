@@ -20,6 +20,8 @@ export class LevelService {
   readonly progress = this._progress.asReadonly();
 
   private index: LevelSummary[] | null = null;
+  private indexRequest: Promise<LevelSummary[]> | null = null;
+  private readonly levelRequests = new Map<number, Promise<LevelData>>();
   private initialized = false;
   private initPromise: Promise<void> | null = null;
 
@@ -41,17 +43,41 @@ export class LevelService {
   }
 
   async getLevelIndex(): Promise<LevelSummary[]> {
-    if (!this.index) {
-      this.index = await firstValueFrom(
-        this.http.get<LevelSummary[]>('assets/levels/levels-index.json'),
-      );
+    if (this.index) return this.index;
+    this.indexRequest ??= firstValueFrom(
+      this.http.get<LevelSummary[]>('assets/levels/levels-index.json'),
+    );
+    try {
+      this.index = await this.indexRequest;
+      return this.index;
+    } finally {
+      this.indexRequest = null;
     }
-    return this.index;
   }
 
   async getLevel(levelId: number): Promise<LevelData> {
+    const cached = this.levelRequests.get(levelId);
+    if (cached) {
+      this.levelRequests.delete(levelId);
+      this.levelRequests.set(levelId, cached);
+      return cached;
+    }
+
     const fileName = `level-${String(levelId).padStart(3, '0')}.json`;
-    return firstValueFrom(this.http.get<LevelData>(`assets/levels/${fileName}`));
+    const request = firstValueFrom(this.http.get<LevelData>(`assets/levels/${fileName}`));
+    this.levelRequests.set(levelId, request);
+    // Keep recent/replayed levels without retaining every board in a long session.
+    if (this.levelRequests.size > 12) {
+      const oldest = this.levelRequests.keys().next().value;
+      if (oldest !== undefined) this.levelRequests.delete(oldest);
+    }
+    try {
+      return await request;
+    } catch (error) {
+      // A transient asset load failure should be retryable on the next attempt.
+      if (this.levelRequests.get(levelId) === request) this.levelRequests.delete(levelId);
+      throw error;
+    }
   }
 
   async getProgress(levelId: number): Promise<LevelProgress> {

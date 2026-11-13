@@ -1,17 +1,18 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular/lazy';
+import { IonContent } from '@ionic/angular/ion-content';
+import { IonIcon } from '@ionic/angular/ion-icon';
 import { HomePage } from './home.page';
 
 import { HomePageRoutingModule } from './home-routing.module';
-import { SharedModule } from '../shared/shared.module';
+import { CoinBalanceComponent } from '../shared/components/coin-balance/coin-balance.component';
 
 
 @NgModule({
   imports: [
     CommonModule,
-    IonicModule,
-    SharedModule,
+    IonContent, IonIcon,
+    CoinBalanceComponent,
     HomePageRoutingModule
   ],
   declarations: [HomePage]

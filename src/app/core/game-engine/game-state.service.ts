@@ -15,7 +15,6 @@ export class GameStateService {
 
   readonly state = this._state.asReadonly();
   readonly isComplete = computed(() => this._state()?.isComplete ?? false);
-  readonly remainingBlocks = computed(() => this._state()?.blocks.length ?? 0);
 
   startLevel(level: LevelData): void {
     this._level = level;
@@ -25,12 +24,6 @@ export class GameStateService {
   restart(): void {
     if (!this._level) return;
     this._state.set(this.engine.restart(this._level));
-  }
-
-  canMove(blockId: string): boolean {
-    const state = this._state();
-    if (!state) return false;
-    return this.engine.canMove(state, blockId);
   }
 
   move(blockId: string): MoveResult | null {
@@ -73,10 +66,6 @@ export class GameStateService {
     const state = this._state();
     if (!state) return;
     this._state.set({ ...state, blocks });
-  }
-
-  currentLevel(): LevelData | null {
-    return this._level;
   }
 
   finalScore(elapsedSeconds: number, powerUpsUsed: number): number {

@@ -128,6 +128,22 @@ describe('GameEngineService', () => {
     expect(engine.undo(state)).toBeNull();
   });
 
+  it('rejects moves after failure without consuming more lives', () => {
+    const state = { ...engine.initializeLevel(makeLevel()), isFailed: true, livesRemaining: 0 };
+    const result = engine.moveBlock(state, 'a');
+    expect(result.moved).toBe(false);
+    expect(result.blocked).toBe(false);
+    expect(result.state).toBe(state);
+  });
+
+  it('prefers the shortest clear escape when suggesting a hint', () => {
+    const state = engine.initializeLevel(makeLevel({ blocks: [
+      { id: 'far', row: 0, column: 0, direction: 'RIGHT', color: 'purple', type: 'ARROW' },
+      { id: 'near', row: 2, column: 3, direction: 'RIGHT', color: 'blue', type: 'ARROW' },
+    ] }));
+    expect(engine.getHintBlockId(state)).toBe('near');
+  });
+
   it('hint always points at a block that can actually move', () => {
     const level = makeLevel({
       blocks: [

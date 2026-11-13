@@ -1,18 +1,25 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { IonicModule } from '@ionic/angular/lazy';
+import { IonBackButton } from '@ionic/angular/ion-back-button';
+import { IonButtons } from '@ionic/angular/ion-buttons';
+import { IonContent } from '@ionic/angular/ion-content';
+import { IonHeader } from '@ionic/angular/ion-header';
+import { IonTitle } from '@ionic/angular/ion-title';
+import { IonToolbar } from '@ionic/angular/ion-toolbar';
 
 import { ThemesPageRoutingModule } from './themes-routing.module';
-import { SharedModule } from '../../../shared/shared.module';
+import { CoinBalanceComponent } from '../../../shared/components/coin-balance/coin-balance.component';
+import { ThemeCardComponent } from '../../../shared/components/theme-card/theme-card.component';
 
 import { ThemesPage } from './themes.page';
 
 @NgModule({
   imports: [
     CommonModule,
-    IonicModule,
-    SharedModule,
+    IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar,
+    CoinBalanceComponent,
+    ThemeCardComponent,
     ThemesPageRoutingModule
   ],
   declarations: [ThemesPage]

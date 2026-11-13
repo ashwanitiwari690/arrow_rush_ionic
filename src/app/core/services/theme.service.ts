@@ -18,7 +18,6 @@ export class ThemeService {
   private readonly _selectedThemeId = signal('classic');
   private readonly _unlockedThemeIds = signal<string[]>(['classic']);
   readonly selectedThemeId = this._selectedThemeId.asReadonly();
-  readonly unlockedThemeIds = this._unlockedThemeIds.asReadonly();
 
   private themes: ThemeDefinition[] = [];
   private initialized = false;

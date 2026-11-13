@@ -1,361 +1,165 @@
-import { Injectable, NgZone, effect, inject } from '@angular/core';
+import { DestroyRef, Injectable, effect, inject } from '@angular/core';
+import { AudioService } from './audio.service';
 import { SettingsService } from './settings.service';
 
-export type MusicTrack = 'menu' | 'gameplay';
+export type MusicTrack = 'menu' | 'gameplay' | 'daily';
 
-// Note frequencies (Hz) for equal temperament tuning
-const C2 = 65.41;
-const F2 = 87.31;
-const G2 = 98.0;
-const A2 = 110.0;
-const Bb2 = 116.54;
-const C3 = 130.81;
-const D3 = 146.83;
-const E3 = 164.81;
-const F3 = 174.61;
-const G3 = 196.0;
-const A3 = 220.0;
-const Bb3 = 233.08;
-const B3 = 246.94;
-const C4 = 261.63;
-const D4 = 293.66;
-const E4 = 329.63;
-const F4 = 349.23;
-const G4 = 392.0;
-const A4 = 440.0;
-const Bb4 = 466.16;
-const B4 = 493.88;
-const C5 = 523.25;
-const D5 = 587.33;
-const E5 = 659.25;
-const F5 = 698.46;
-const G5 = 783.99;
-const A5 = 880.0;
-
-interface TrackConfig {
-  stepIntervalMs: number;
-  stepsCount: number;
+interface Arrangement {
+  bpm: number;
+  roots: number[];
   melody: (number | null)[];
-  chords: (number[] | null)[];
-  bass: (number | null)[];
-  pulse: boolean[];
+  minor: boolean;
 }
 
-/**
- * Menu Track: "Neon Horizon"
- * Warm, uplifting, catchy casual game melody in C Major (Cmaj7 -> Am7 -> Fmaj7 -> G7).
- * Sounds like a cheerful, relaxing arcade puzzle theme (soft kalimba chimes + warm Rhodes chords + gentle bass).
- */
-const MENU_TRACK: TrackConfig = {
-  stepIntervalMs: 140, // ~107 BPM (16th notes)
-  stepsCount: 32,
-  melody: [
-    E5, null, G5, null, E5, D5, C5, null,
-    E5, null, D5, null, G4, null, A4, null,
-    C5, null, D5, null, E5, G5, A5, null,
-    G5, null, E5, D5, C5, null, null, null,
-  ],
-  chords: [
-    [C4, E4, G4, B4], null, null, null, null, null, [C4, E4, G4], null,
-    [A3, C4, E4, G4], null, null, null, null, null, [A3, C4, E4], null,
-    [F3, A3, C4, E4], null, null, null, null, null, [F3, A3, C4], null,
-    [G3, B3, D4, F4], null, null, null, null, null, [G3, B3, D4], null,
-  ],
-  bass: [
-    C3, null, null, null, C3, null, G2, null,
-    A2, null, null, null, A2, null, E3, null,
-    F2, null, null, null, F2, null, C3, null,
-    G2, null, null, null, G2, null, B2_freq(123.47), null,
-  ],
-  pulse: [
-    true, false, false, false, true, false, false, false,
-    true, false, false, false, true, false, false, false,
-    true, false, false, false, true, false, false, false,
-    true, false, false, false, true, false, false, false,
-  ],
+// Original eight-bar motifs: spacious menu, mellow puzzle groove, brighter daily challenge.
+const TRACKS: Record<MusicTrack, Arrangement> = {
+  menu: {
+    bpm: 92, roots: [48, 45, 41, 43], minor: false,
+    melody: [76, null, 79, null, 76, 74, 72, null, 76, null, 74, null, 67, null, 69, null,
+      72, null, 74, null, 76, 79, 81, null, 79, null, 76, 74, 72, null, null, null],
+  },
+  gameplay: {
+    bpm: 104, roots: [50, 46, 41, 48], minor: true,
+    melody: [74, null, 77, null, 81, null, 77, null, 74, null, 77, null, 70, null, 72, null,
+      69, null, 72, null, 77, null, 76, null, 74, null, 72, null, 69, null, null, null],
+  },
+  daily: {
+    bpm: 120, roots: [45, 41, 48, 43], minor: true,
+    melody: [76, 81, null, 79, 76, null, 72, null, 77, null, 81, 79, 77, null, 74, null,
+      76, 79, null, 84, 79, null, 76, null, 74, null, 79, 77, 76, 74, 72, null],
+  },
 };
 
-function B2_freq(n: number): number {
-  return n;
-}
+const frequency = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
-/**
- * Gameplay Track: "Arrow Flow"
- * Upbeat, focused, rhythmic puzzle groove in D minor (Dm -> Bb -> F -> C).
- * Energetic, satisfying, driving pulse designed for puzzle concentration and flow state.
- */
-const GAMEPLAY_TRACK: TrackConfig = {
-  stepIntervalMs: 125, // ~120 BPM (16th notes)
-  stepsCount: 32,
-  melody: [
-    D5, F5, A5, F5, D5, F5, E5, C5,
-    D5, F5, Bb4, D5, F5, D5, C5, A4,
-    F4, A4, C5, A4, F5, E5, D5, C5,
-    D5, null, E5, null, F5, E5, D5, null,
-  ],
-  chords: [
-    [D4, F4, A4], null, null, null, [D4, F4], null, null, null,
-    [Bb3, D4, F4], null, null, null, [Bb3, D4], null, null, null,
-    [F3, A3, C4], null, null, null, [F3, A3], null, null, null,
-    [C4, E4, G4], null, null, null, [C4, E4], null, null, null,
-  ],
-  bass: [
-    D3, null, D3, null, null, D3, null, null,
-    Bb2, null, Bb2, null, null, Bb2, null, null,
-    F2, null, F2, null, null, F2, null, null,
-    C3, null, C3, null, null, C3, null, null,
-  ],
-  pulse: [
-    true, false, true, false, true, false, true, false,
-    true, false, true, false, true, false, true, false,
-    true, false, true, false, true, false, true, false,
-    true, false, true, false, true, false, true, false,
-  ],
-};
-
-/**
- * Procedural soundtrack synthesizer for Arrow Rush.
- * Generates custom, catchy, pleasing puzzle-game music (melodic kalimba chimes,
- * warm electric-piano chords, bouncy synth bass, and gentle rhythm pulse)
- * at a balanced, comfortable background volume.
- */
+/** Render each arrangement once; playback uses one looping source and no JS music timer. */
 @Injectable({ providedIn: 'root' })
 export class MusicService {
-  private readonly settingsService = inject(SettingsService);
-  private readonly ngZone = inject(NgZone);
-
-  private audioContext: AudioContext | null = null;
-  private masterGain: GainNode | null = null;
-  private filterNode: BiquadFilterNode | null = null;
-  private compressor: DynamicsCompressorNode | null = null;
-
+  private readonly audio = inject(AudioService);
+  private readonly settings = inject(SettingsService).settings;
+  private readonly buffers = new Map<MusicTrack, Promise<AudioBuffer>>();
+  private source: AudioBufferSourceNode | null = null;
   private currentTrack: MusicTrack | null = null;
-  private stepTimer: ReturnType<typeof setInterval> | null = null;
-  private currentStep = 0;
-
-  // Comfortable background music volume level
-  private readonly musicVolume = 0.36;
+  private paused = false;
+  private adPaused = false;
+  private unlocked = false;
+  private generation = 0;
 
   constructor() {
     effect(() => {
-      const enabled = this.settingsService.settings().musicEnabled;
-      if (!enabled) {
-        this.stopTimer();
-      } else if (this.currentTrack) {
-        this.restartTrack();
-      }
+      const enabled = this.settings().musicEnabled;
+      const active = this.audio.appActive();
+      if (!enabled || !active) this.stopSource();
+      else void this.playCurrent();
     });
+    inject(DestroyRef).onDestroy(() => this.stop());
   }
 
   start(track: MusicTrack): void {
-    if (this.currentTrack === track && this.stepTimer) return;
-    this.currentTrack = track;
-    this.currentStep = 0;
-    this.stopTimer();
-
-    if (this.settingsService.settings().musicEnabled) {
-      this.restartTrack();
+    if (track !== this.currentTrack) {
+      this.stopSource();
+      this.currentTrack = track;
     }
+    this.paused = false;
+    void this.playCurrent();
   }
 
   stop(): void {
     this.currentTrack = null;
-    this.stopTimer();
+    this.paused = false;
+    this.stopSource();
   }
 
   pause(): void {
-    this.stopTimer();
+    this.paused = true;
+    this.stopSource();
   }
 
   resume(): void {
-    if (this.currentTrack && !this.stepTimer && this.settingsService.settings().musicEnabled) {
-      this.restartTrack();
-    }
+    this.paused = false;
+    void this.playCurrent();
+  }
+
+  setAdPaused(paused: boolean): void {
+    this.adPaused = paused;
+    if (paused) this.stopSource();
+    else void this.playCurrent();
   }
 
   unlock(): void {
-    const ctx = this.ensureContext();
-    if (ctx?.state === 'suspended') {
-      void ctx.resume();
-    }
-    if (this.currentTrack && !this.stepTimer && this.settingsService.settings().musicEnabled) {
-      this.restartTrack();
+    this.unlocked = true;
+    this.audio.unlock();
+    void this.playCurrent();
+  }
+
+  private async playCurrent(): Promise<void> {
+    if (!this.unlocked || this.paused || this.adPaused || this.source || !this.currentTrack || !this.settings().musicEnabled || !this.audio.appActive()) return;
+    const ctx = this.audio.getContext();
+    const output = this.audio.output('music');
+    if (!ctx || !output || typeof OfflineAudioContext === 'undefined') return;
+    const track = this.currentTrack;
+    const generation = ++this.generation;
+    try {
+      let rendered = this.buffers.get(track);
+      if (!rendered) {
+        rendered = this.renderTrack(track);
+        this.buffers.set(track, rendered);
+      }
+      const buffer = await rendered;
+      if (generation !== this.generation || this.paused || this.adPaused || !this.settings().musicEnabled || !this.audio.appActive()) return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(output);
+      source.start();
+      this.source = source;
+    } catch {
+      this.buffers.delete(track);
     }
   }
 
-  private stopTimer(): void {
-    if (this.stepTimer) {
-      clearInterval(this.stepTimer);
-      this.stepTimer = null;
-    }
+  private stopSource(): void {
+    ++this.generation;
+    if (!this.source) return;
+    this.source.stop();
+    this.source.disconnect();
+    this.source = null;
   }
 
-  private restartTrack(): void {
-    this.stopTimer();
-    const config = this.currentTrack === 'gameplay' ? GAMEPLAY_TRACK : MENU_TRACK;
-
-    const tick = () => {
-      if (!this.settingsService.settings().musicEnabled) return;
-      const ctx = this.ensureContext();
-      if (!ctx) return;
-
-      const step = this.currentStep % config.stepsCount;
-      this.currentStep++;
-
-      const now = ctx.currentTime;
-
-      // 1. Play melody chime/pluck
-      const noteFreq = config.melody[step];
-      if (noteFreq) {
-        this.playChime(ctx, noteFreq, now);
-      }
-
-      // 2. Play warm chord pad
-      const chord = config.chords[step];
-      if (chord) {
-        this.playChord(ctx, chord, now, (config.stepIntervalMs * 3.5) / 1000);
-      }
-
-      // 3. Play bass groove
-      const bassFreq = config.bass[step];
-      if (bassFreq) {
-        this.playBass(ctx, bassFreq, now, (config.stepIntervalMs * 1.8) / 1000);
-      }
-
-      // 4. Subtle percussion pulse
-      if (config.pulse[step]) {
-        this.playPulse(ctx, now);
-      }
+  private async renderTrack(track: MusicTrack): Promise<AudioBuffer> {
+    const config = TRACKS[track];
+    const step = 60 / config.bpm / 2;
+    const duration = step * 64;
+    const ctx = new OfflineAudioContext(1, Math.ceil(duration * 22050), 22050);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 2600;
+    filter.connect(ctx.destination);
+    const note = (midi: number, start: number, length: number, gain: number, type: OscillatorType = 'sine') => {
+      const oscillator = ctx.createOscillator();
+      const envelope = ctx.createGain();
+      const end = Math.min(start + length, duration);
+      oscillator.type = type;
+      oscillator.frequency.value = frequency(midi);
+      envelope.gain.setValueAtTime(0.0001, start);
+      envelope.gain.exponentialRampToValueAtTime(gain, start + 0.008);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, end);
+      oscillator.connect(envelope).connect(filter);
+      oscillator.start(start);
+      oscillator.stop(end);
     };
-
-    tick();
-    this.ngZone.runOutsideAngular(() => {
-      this.stepTimer = setInterval(tick, config.stepIntervalMs);
-    });
-  }
-
-  /**
-   * Warm kalimba / music-box chime pluck for the main melody.
-   * Dual-harmonic sine with fast attack and natural acoustic-like decay.
-   */
-  private playChime(ctx: AudioContext, frequency: number, startAt: number): void {
-    const out = this.filterNode ?? ctx.destination;
-
-    // Fundamental note
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(frequency, startAt);
-
-    gain1.gain.setValueAtTime(0.0001, startAt);
-    gain1.gain.exponentialRampToValueAtTime(this.musicVolume * 0.42, startAt + 0.006);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.28);
-
-    osc1.connect(gain1).connect(out);
-    osc1.start(startAt);
-    osc1.stop(startAt + 0.3);
-
-    // Lightweight single-harmonic crystal chime avoids excess AudioNode churn
-
-  }
-
-  /**
-   * Warm electric piano / Rhodes chord.
-   */
-  private playChord(ctx: AudioContext, frequencies: number[], startAt: number, duration: number): void {
-    const out = this.filterNode ?? ctx.destination;
-    const voices = frequencies.slice(0, 2);
-    const perVoiceGain = (this.musicVolume * 0.24) / voices.length;
-
-    for (const freq of voices) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, startAt);
-
-      gain.gain.setValueAtTime(0.0001, startAt);
-      gain.gain.exponentialRampToValueAtTime(perVoiceGain, startAt + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-
-      osc.connect(gain).connect(out);
-      osc.start(startAt);
-      osc.stop(startAt + duration + 0.02);
+    for (let i = 0; i < 64; i++) {
+      const start = i * step;
+      const root = config.roots[Math.floor(i / 8) % 4];
+      const melody = config.melody[i % config.melody.length];
+      if (melody !== null) note(melody + (i >= 32 && i % 8 === 0 ? -12 : 0), start, step * 0.85, 0.12);
+      if (i % 4 === 0) {
+        note(root - 12, start, step * 1.8, 0.15);
+        note(root + 12, start, step * 2.5, 0.045, 'triangle');
+        note(root + (config.minor ? 15 : 16), start, step * 2.5, 0.035, 'triangle');
+      }
+      if (track !== 'menu' && i % 2 === 0) note(42, start, 0.06, 0.07);
     }
-  }
-
-  /**
-   * Bouncy, punchy synth bassline.
-   */
-  private playBass(ctx: AudioContext, frequency: number, startAt: number, duration: number): void {
-    const out = this.filterNode ?? ctx.destination;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(frequency, startAt);
-
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(this.musicVolume * 0.35, startAt + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-
-    osc.connect(gain).connect(out);
-    osc.start(startAt);
-    osc.stop(startAt + duration + 0.02);
-  }
-
-  /**
-   * Very soft hi-hat/brush pulse to keep rhythm moving.
-   */
-  private playPulse(ctx: AudioContext, startAt: number): void {
-    const out = this.filterNode ?? ctx.destination;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1400, startAt);
-
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(this.musicVolume * 0.05, startAt + 0.003);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.025);
-
-    osc.connect(gain).connect(out);
-    osc.start(startAt);
-    osc.stop(startAt + 0.03);
-  }
-
-  private ensureContext(): AudioContext | null {
-    if (typeof window === 'undefined') return null;
-    const AudioCtor = window.AudioContext ?? (window as any).webkitAudioContext;
-    if (!AudioCtor) return null;
-
-    if (!this.audioContext) {
-      this.audioContext = new AudioCtor();
-
-      // Master bus: Filter to keep tone warm and pleasing
-      this.filterNode = this.audioContext.createBiquadFilter();
-      this.filterNode.type = 'lowpass';
-      this.filterNode.frequency.value = 2800;
-
-      // Gentle compressor to balance dynamics
-      this.compressor = this.audioContext.createDynamicsCompressor();
-      this.compressor.threshold.value = -12;
-      this.compressor.knee.value = 12;
-      this.compressor.ratio.value = 3;
-      this.compressor.attack.value = 0.004;
-      this.compressor.release.value = 0.15;
-
-      this.masterGain = this.audioContext.createGain();
-      this.masterGain.gain.value = 1.0;
-
-      this.filterNode.connect(this.compressor);
-      this.compressor.connect(this.masterGain);
-      this.masterGain.connect(this.audioContext.destination);
-    }
-
-    if (this.audioContext.state === 'suspended') {
-      void this.audioContext.resume();
-    }
-    return this.audioContext;
+    return ctx.startRendering();
   }
 }

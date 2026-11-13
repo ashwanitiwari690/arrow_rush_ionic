@@ -16,13 +16,13 @@ export class LevelCompletePanelComponent {
   @Input() isDailyChallenge = false;
   @Input() adAvailable = false;
   @Input() isProcessingAd = false;
-  @Input() coinsDoubled = false;
+  @Input() hintClaimed = false;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() replay = new EventEmitter<void>();
   @Output() levelMap = new EventEmitter<void>();
   @Output() dailyComplete = new EventEmitter<void>();
-  @Output() watchAdForDoubleCoins = new EventEmitter<void>();
+  @Output() watchAdForHint = new EventEmitter<void>();
 
   get formattedTime(): string {
     const minutes = Math.floor(this.timeSeconds / 60);

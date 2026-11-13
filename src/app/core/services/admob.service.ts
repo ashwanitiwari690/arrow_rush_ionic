@@ -1,372 +1,504 @@
-import { Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, effect, inject, untracked } from '@angular/core';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import {
-  AdMob,
-  AdmobConsentStatus,
-  BannerAdOptions,
-  BannerAdPluginEvents,
-  BannerAdPosition,
-  BannerAdSize,
-  InterstitialAdPluginEvents,
-  RewardAdPluginEvents,
+  AdMob, AdmobConsentInfo, AdmobConsentStatus, BannerAdPluginEvents,
+  BannerAdPosition, BannerAdSize, InterstitialAdPluginEvents,
+  MaxAdContentRating, RewardAdPluginEvents,
 } from '@capacitor-community/admob';
-import { AdService, RewardedAdResult } from './ad.service';
+import { AdService, InterstitialBreakpoint, RewardedAdResult } from './ad.service';
+import { AdFrequencyService, FullScreenAdFormat } from './ad-frequency.service';
 import { MockAdService } from './mock-ad.service';
 import { MusicService } from './music.service';
-import { AD_UNIT_IDS, AD_LOAD_TIMEOUT_MS } from '../config/admob.config';
+import { AudioService } from './audio.service';
+import { ConnectivityService } from './connectivity.service';
+import { AD_UNIT_IDS, AD_LOAD_TIMEOUT_MS, AD_POLICY, BANNER_SCREENS } from '../config/admob.config';
 import { environment } from '../../../environments/environment';
 
-/**
- * Real AdMob-backed implementation of AdService, using @capacitor-community/admob.
- * Ad unit IDs are resolved dynamically based on environment (see admob.config.ts).
- *
- * Ads only run on native platforms (Android) — gated behind `Capacitor.isNativePlatform()`
- * and delegates to MockAdService in a desktop browser (`ng serve`), keeping the UI
- * testable without a device while guaranteeing web can never grant a real reward.
- */
+interface AdSlot {
+  loadedAt: number | null;
+  loading?: Promise<void>;
+  failures: number;
+  nextAttemptAt: number;
+}
+const newSlot = (): AdSlot => ({ loadedAt: null, failures: 0, nextAttemptAt: 0 });
+
+/** Consent-gated native serving. Web previews never make live AdMob requests. */
 @Injectable({ providedIn: 'root' })
 export class AdMobService extends AdService {
   private readonly mock = inject(MockAdService);
   private readonly music = inject(MusicService);
-
+  private readonly audio = inject(AudioService);
+  private readonly connectivity = inject(ConnectivityService);
+  private readonly frequency = inject(AdFrequencyService);
   private readonly isNative = Capacitor.isNativePlatform();
-
+  private readonly slots = { interstitial: newSlot(), rewarded: newSlot() };
   private initPromise?: Promise<void>;
+  private initialized = false;
+  private sdkInitialized = false;
+  private consentAllowed = false;
+  private nextInitAttemptAt = 0;
+  private fullScreenInFlight = false;
+  private screen = '';
+  private screenEpoch = 0;
+  private adGeneration = 0;
+  private destroyed = false;
+  private bannerExists = false;
   private bannerVisible = false;
-  private bannerPendingHide = false;
-  private bannerListenersRegistered = false;
+  private bannerFailures = 0;
+  private bannerWindowEndsAt = 0;
+  private bannerNeedsNewVisit = false;
+  private bannerWindowTimer?: ReturnType<typeof setTimeout>;
+  private bannerNextAttemptAt = 0;
+  private bannerQueue = Promise.resolve();
+  private bannerListeners?: Promise<void>;
+  private retryTimer?: ReturnType<typeof setTimeout>;
+  private retryAt = Infinity;
+  private readonly bannerHandles: PluginListenerHandle[] = [];
+  private readonly overlays = new Set<EventTarget>();
 
-  private interstitialReady = false;
-  private interstitialLoading?: Promise<void>;
-  private roundsSinceInterstitial = 0;
-
-  /** Minimum interval (ms) between full-screen ads. Prevents high ad density and policy flags. */
-  private readonly MIN_INTERSTITIAL_COOLDOWN_MS = 75000; // 75 seconds
-  // Start with current timestamp so users get a clean, ad-free experience when opening the game
-  private lastFullScreenAdTime = Date.now();
-
-  private rewardedReady = false;
-  private rewardedLoading?: Promise<void>;
-  // Guards against duplicate taps triggering parallel rewarded ad flows
-  private rewardInFlight = false;
+  constructor() {
+    super();
+    const overlayCleanup: (() => void)[] = [];
+    if (typeof document !== 'undefined') {
+      const opening = (event: Event) => {
+        if (event.target) this.overlays.add(event.target);
+        void this.hideBanner();
+      };
+      const closed = (event: Event) => {
+        if (event.target) this.overlays.delete(event.target);
+        this.queueBanner();
+      };
+      for (const name of ['ionAlert', 'ionModal', 'ionPopover', 'ionActionSheet']) {
+        document.addEventListener(`${name}WillPresent`, opening, true);
+        document.addEventListener(`${name}DidDismiss`, closed, true);
+        overlayCleanup.push(() => {
+          document.removeEventListener(`${name}WillPresent`, opening, true);
+          document.removeEventListener(`${name}DidDismiss`, closed, true);
+        });
+      }
+    }
+    effect(() => {
+      const active = this.audio.appActive();
+      const online = this.connectivity.online();
+      untracked(() => {
+        if (!active || !online) {
+          void this.hideBanner();
+          if (this.retryTimer) clearTimeout(this.retryTimer);
+          this.retryTimer = undefined;
+          this.retryAt = Infinity;
+        }
+        this.queueBanner();
+        if (active && online) void this.initialize().then(() => this.preloadFormats());
+      });
+    });
+    inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
+      for (const remove of overlayCleanup) remove();
+      this.adGeneration++;
+      if (this.retryTimer) clearTimeout(this.retryTimer);
+      if (this.bannerWindowTimer) clearTimeout(this.bannerWindowTimer);
+      for (const handle of this.bannerHandles) void handle.remove();
+      if (this.isNative && this.bannerExists) void AdMob.removeBanner().catch(() => undefined);
+    });
+  }
 
   initialize(): Promise<void> {
-    if (!this.isNative) return this.mock.initialize();
-    if (!this.initPromise) {
-      this.initPromise = (async () => {
-        try {
-          this.log(`Initializing Mobile Ads SDK (Production: ${environment.production})`);
-
-          // 1. Google UMP Consent Flow (Required for EEA/UK compliance)
-          try {
-            const consentInfo = await AdMob.requestConsentInfo();
-            this.log('UMP consent status:', consentInfo.status, 'form available:', consentInfo.isConsentFormAvailable);
-
-            if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
-              await AdMob.showConsentForm();
-              this.log('UMP consent form completed by user.');
-            }
-          } catch (consentErr) {
-            this.log('UMP consent check skipped or unavailable:', consentErr);
-          }
-
-          // 2. Initialize AdMob with official testing mode flag based on build
-          await AdMob.initialize({ initializeForTesting: !environment.production });
-          this.log('AdMob SDK initialized successfully.');
-
-          // 3. Preload initial full-screen ads in background for instant readiness
-          void this.preloadInterstitial();
-          void this.preloadRewarded();
-        } catch (err) {
-          this.log('AdMob initialization error:', err);
-        }
-      })();
-    }
+    if (!environment.features.adsEnabled || !this.isNative) return Promise.resolve();
+    if (this.initialized) return Promise.resolve();
+    if (this.initPromise) return this.initPromise;
+    if (!this.foreground() || Date.now() < this.nextInitAttemptAt) return Promise.resolve();
+    this.nextInitAttemptAt = Date.now() + AD_POLICY.retryBaseMs;
+    this.initPromise = this.initializeNative().finally(() => { this.initPromise = undefined; });
     return this.initPromise;
   }
 
-  async showRewardedAd(): Promise<RewardedAdResult> {
-    if (!environment.features.rewardedAdsEnabled) {
-      return { granted: false, reason: 'Ads are disabled in this build.' };
+  private async initializeNative(): Promise<void> {
+    try {
+      let info = await AdMob.requestConsentInfo();
+      if (info.status === AdmobConsentStatus.REQUIRED && info.isConsentFormAvailable) {
+        info = await AdMob.showConsentForm();
+      }
+      this.applyConsent(info);
+      if (!this.consentAllowed || this.destroyed) return;
+      if (!this.sdkInitialized) {
+        await AdMob.initialize({
+          initializeForTesting: !environment.production || environment.ads.testingDevices.length > 0,
+          testingDevices: environment.ads.testingDevices,
+          tagForChildDirectedTreatment: false, // Publisher-confirmed 13+ audience.
+          maxAdContentRating: MaxAdContentRating.General,
+        });
+        this.sdkInitialized = true;
+      }
+      await this.frequency.init();
+      this.initialized = true;
+      this.preloadFormats();
+      this.queueBanner();
+    } catch (error) {
+      // No ad request is permitted when UMP eligibility cannot be established.
+      this.consentAllowed = false;
+      this.log('Consent/SDK initialization unavailable; ads deferred.', error);
+      this.scheduleRetry(this.nextInitAttemptAt);
     }
-    if (!this.isNative) return this.mock.showRewardedAd();
+  }
 
-    if (this.rewardInFlight) {
-      return { granted: false, reason: 'An ad is already in progress.' };
+  setScreen(path: string): void {
+    this.screen = path.split(/[?#]/)[0];
+    if (BANNER_SCREENS.has(this.screen)) {
+      this.bannerNeedsNewVisit = false;
+      if (Date.now() >= this.bannerWindowEndsAt) {
+        this.bannerWindowEndsAt = 0;
+        if (this.bannerWindowTimer) clearTimeout(this.bannerWindowTimer);
+      }
     }
-    this.rewardInFlight = true;
-    this.music.pause();
+    this.screenEpoch++;
+    if (!this.bannerAllowed()) void this.hideBanner();
+    this.queueBanner();
+    void this.initialize().then(() => { this.preloadFormats(); this.queueBanner(); });
+  }
 
+  async showPrivacyOptions(): Promise<boolean> {
+    if (!this.isNative || !environment.features.adsEnabled || this.fullScreenInFlight || !this.foreground()) return false;
+    this.fullScreenInFlight = true;
+    this._fullScreenShowing.set(true);
+    this.music.setAdPaused(true);
+    this.invalidateAds();
+    this.consentAllowed = false;
+    try {
+      await this.hideBanner();
+      await AdMob.showPrivacyOptionsForm();
+      this.applyConsent(await AdMob.requestConsentInfo());
+      if (!this.consentAllowed) this.initialized = false;
+      return true;
+    } catch (error) {
+      this.consentAllowed = false;
+      this.initialized = false;
+      this.log('Privacy options unavailable.', error);
+      return false;
+    } finally {
+      this._fullScreenShowing.set(false);
+      this.fullScreenInFlight = false;
+      this.music.setAdPaused(false);
+      void this.initialize().then(() => { this.preloadFormats(); this.queueBanner(); });
+    }
+  }
+
+  async showRewardedAd(canShow: () => boolean = () => true): Promise<RewardedAdResult> {
+    if (!this.enabled('rewarded')) return { granted: false, reason: 'Ads are disabled in this build.' };
+    if (!this.isNative) return this.mock.showRewardedAd(canShow);
+    if (this.fullScreenInFlight) return { granted: false, reason: 'Another ad or privacy form is already open.' };
+    const epoch = this.screenEpoch;
+    const presentable = () => epoch === this.screenEpoch && canShow() && this.foreground() && !this.overlayOpen();
+    this.fullScreenInFlight = true;
     try {
       await this.initialize();
-      if (!this.rewardedReady) {
-        this.log('Rewarded ad not preloaded, attempting just-in-time load...');
-        await Promise.race([this.preloadRewarded(), this.timeout()]);
-      }
-      if (!this.rewardedReady) {
-        this.log('Rewarded ad unavailable at show time.');
-        return { granted: false, reason: 'No ad is available right now. Please try again shortly.' };
-      }
-
-      this.rewardedReady = false;
-      const granted = await this.awaitRewardConfirmation();
-
-      // Reset cooldown and counter: user just watched a rewarded ad, so never follow up with an interstitial
-      this.lastFullScreenAdTime = Date.now();
-      this.roundsSinceInterstitial = 0;
-      void this.preloadRewarded();
-
-      return granted ? { granted: true } : { granted: false, reason: 'Ad was closed before it finished.' };
+      if (!this.canRequest() || !presentable()) return { granted: false, reason: 'An ad is not available right now.' };
+      if (!this.frequency.canShow('rewarded')) return { granted: false, reason: 'Please wait a little before watching another ad.' };
+      await this.preload('rewarded');
+      if (!this.ready('rewarded') || !presentable()) return { granted: false, reason: 'No ad is ready. Please try again shortly.' };
+      const granted = await this.showPrepared('rewarded', presentable);
+      return granted ? { granted: true } : { granted: false, reason: 'Ad not completed. No reward was added.' };
+    } catch (error) {
+      this.log('Rewarded ad unavailable.', error);
+      return { granted: false, reason: 'An ad could not be shown. Please try again later.' };
     } finally {
-      this.rewardInFlight = false;
-      this.music.resume();
+      this.fullScreenInFlight = false;
+      this.preloadFormats();
+      this.queueBanner();
     }
   }
 
-  async showInterstitialAd(): Promise<void> {
-    if (!environment.features.interstitialAdsEnabled) return;
-    if (!this.isNative) return this.mock.showInterstitialAd();
-
-    await this.initialize();
-    if (!this.interstitialReady) {
-      this.log('Interstitial not preloaded, attempting just-in-time load...');
-      await Promise.race([this.preloadInterstitial(), this.timeout()]);
-    }
-    if (!this.interstitialReady) {
-      this.log('Interstitial ad not ready, skipping breakpoint cleanly.');
-      return;
-    }
-
-    this.interstitialReady = false;
-    this.lastFullScreenAdTime = Date.now();
-    this.music.pause();
+  async maybeShowInterstitialAtBreakpoint(breakpoint: InterstitialBreakpoint): Promise<void> {
+    if (!this.enabled('interstitial') || !breakpoint.roundId) return;
+    if (!this.isNative) return this.mock.maybeShowInterstitialAtBreakpoint(breakpoint);
+    this.frequency.completeRound(breakpoint.roundId);
+    if (this.fullScreenInFlight || !this.canRequest() || !breakpoint.canShow()) return;
+    const epoch = this.screenEpoch;
+    const presentable = () => epoch === this.screenEpoch && this.foreground() && !this.overlayOpen() && breakpoint.canShow();
+    if (!this.frequency.canShow('interstitial')) return;
+    // Never wait for an interstitial to load after the player has reached a break.
+    if (!this.ready('interstitial')) { void this.preload('interstitial'); return; }
+    this.fullScreenInFlight = true;
     try {
-      await this.awaitInterstitialDismissal();
+      await new Promise((resolve) => setTimeout(resolve, AD_POLICY.roundBreakDelayMs));
+      if (!presentable() || !this.canRequest() || !this.frequency.canShow('interstitial')) return;
+      await this.showPrepared('interstitial', presentable);
+    } catch (error) {
+      this.log('Interstitial skipped.', error);
     } finally {
-      this.lastFullScreenAdTime = Date.now();
-      this.music.resume();
-      void this.preloadInterstitial();
+      this.fullScreenInFlight = false;
+      this.preloadFormats();
+      this.queueBanner();
     }
   }
 
-  async maybeShowInterstitialAtBreakpoint(): Promise<void> {
-    if (!environment.features.interstitialAdsEnabled) return;
-
-    this.roundsSinceInterstitial++;
-
-    // 1. Must satisfy rounds interval threshold (e.g. every 3 levels)
-    if (this.roundsSinceInterstitial < environment.ads.interstitialLevelInterval) {
-      this.log(`Interstitial skipped: round ${this.roundsSinceInterstitial}/${environment.ads.interstitialLevelInterval}`);
-      return;
-    }
-
-    // 2. Must satisfy time cooldown (at least 75 seconds between full-screen ads)
-    const now = Date.now();
-    const elapsedSinceLastAd = now - this.lastFullScreenAdTime;
-    if (elapsedSinceLastAd < this.MIN_INTERSTITIAL_COOLDOWN_MS) {
-      this.log(`Interstitial skipped: cooldown active (${Math.round((this.MIN_INTERSTITIAL_COOLDOWN_MS - elapsedSinceLastAd) / 1000)}s remaining)`);
-      return;
-    }
-
-    this.roundsSinceInterstitial = 0;
-    this.lastFullScreenAdTime = now;
-    await this.showInterstitialAd();
-  }
-
-  async showBanner(): Promise<void> {
-    if (!environment.features.bannerAdsEnabled) return;
-    if (!this.isNative) return this.mock.showBanner();
-
-    this.bannerPendingHide = false;
-    await this.initialize();
-    if (this.bannerVisible || this.bannerPendingHide) return;
-
-    const options: BannerAdOptions = {
-      adId: AD_UNIT_IDS.banner,
-      adSize: BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
-    };
-
-    try {
-      if (!this.bannerListenersRegistered) {
-        this.bannerListenersRegistered = true;
-        await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (err) => {
-          this.log('Banner failed to load:', err);
-          this.bannerVisible = false;
-        });
-        await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-          this.log('Banner loaded successfully.');
-          this.bannerVisible = true;
-        });
-      }
-
-      await AdMob.showBanner(options);
-      if (this.bannerPendingHide) {
-        await AdMob.removeBanner();
-        this.bannerVisible = false;
-      } else {
-        this.bannerVisible = true;
-        this.log('Banner displayed.');
-      }
-    } catch (err) {
-      this.log('Error showing banner:', err);
-      this.bannerVisible = false;
-    }
-  }
+  async showBanner(): Promise<void> { this.queueBanner(); await this.bannerQueue; }
 
   async hideBanner(): Promise<void> {
-    if (!this.isNative) return this.mock.hideBanner();
-    this.bannerPendingHide = true;
-    if (!this.bannerVisible) return;
-
+    this._bannerHeight.set(0);
+    if (!this.isNative || !this.bannerExists) return;
+    await AdMob.hideBanner().catch(() => undefined);
     this.bannerVisible = false;
+  }
+
+  private applyConsent(info: AdmobConsentInfo): void {
+    this.consentAllowed = info.canRequestAds === true;
+    this._privacyOptionsRequired.set(info.privacyOptionsRequirementStatus === 'REQUIRED');
+  }
+
+  private foreground(): boolean {
+    return !this.destroyed && this.audio.appActive() && this.connectivity.online();
+  }
+
+  private enabled(format: FullScreenAdFormat): boolean {
+    return environment.features.adsEnabled && (format === 'rewarded' ? environment.features.rewardedAdsEnabled : environment.features.interstitialAdsEnabled);
+  }
+
+  private canRequest(): boolean {
+    return this.sdkInitialized && this.consentAllowed && this.foreground() && environment.features.adsEnabled;
+  }
+
+  private ready(format: FullScreenAdFormat): boolean {
+    const loaded = this.slots[format].loadedAt;
+    return loaded !== null && Date.now() - loaded < AD_POLICY.cachedAdLifetimeMs;
+  }
+
+  private preloadFormats(): void {
+    if (!this.isNative || !this.canRequest() || this.fullScreenInFlight) return;
+    void this.preload('interstitial');
+    void this.preload('rewarded');
+  }
+
+  private preload(format: FullScreenAdFormat): Promise<void> {
+    const slot = this.slots[format];
+    if (!this.enabled(format) || !this.canRequest()) return Promise.resolve();
+    if (this.ready(format)) {
+      this.scheduleRetry(slot.loadedAt! + AD_POLICY.cachedAdLifetimeMs);
+      return Promise.resolve();
+    }
+    if (slot.loading) return slot.loading;
+    if (Date.now() < slot.nextAttemptAt) {
+      this.scheduleRetry(slot.nextAttemptAt);
+      return Promise.resolve();
+    }
+    if (!this.frequency.reserveRequest(format)) {
+      this.scheduleRetry(this.frequency.nextRequestAllowedAt(format));
+      return Promise.resolve();
+    }
+    const generation = this.adGeneration;
+    const request = Promise.resolve().then(() => format === 'interstitial'
+      ? AdMob.prepareInterstitial({ adId: AD_UNIT_IDS.interstitial, isTesting: !environment.production })
+      : AdMob.prepareRewardVideoAd({ adId: AD_UNIT_IDS.rewarded, isTesting: !environment.production }));
+    const task = this.withTimeout(request).then(() => {
+      if (generation !== this.adGeneration || !this.consentAllowed) return;
+      slot.loadedAt = Date.now();
+      slot.failures = 0;
+      slot.nextAttemptAt = 0;
+      this.scheduleRetry(slot.loadedAt + AD_POLICY.cachedAdLifetimeMs);
+    }).catch((error: unknown) => {
+      slot.loadedAt = null;
+      slot.failures++;
+      slot.nextAttemptAt = Date.now() + this.backoff(slot.failures);
+      this.scheduleRetry(slot.nextAttemptAt);
+      this.log(`${format} load deferred.`, error);
+    }).finally(() => {
+      if (slot.loading === task) slot.loading = undefined;
+      if (generation !== this.adGeneration) this.preloadFormats();
+    });
+    slot.loading = task;
+    return task;
+  }
+
+  private async showPrepared(format: FullScreenAdFormat, canShow: () => boolean): Promise<boolean> {
+    let earned = false;
+    let shown = false;
+    let settled = false;
+    let dismissed = false;
+    let dismissalTimer: ReturnType<typeof setTimeout> | undefined;
+    let resolveCompletion!: (value: boolean) => void;
+    const completion = new Promise<boolean>((resolve) => { resolveCompletion = resolve; });
+    const handles: PluginListenerHandle[] = [];
+    const finish = (granted: boolean) => { if (!settled) { settled = true; resolveCompletion(granted); } };
+    const onShown = () => {
+      if (shown) return;
+      shown = true;
+      this.frequency.shown(format);
+    };
+    const onDismissed = () => {
+      if (settled || dismissed) return;
+      dismissed = true;
+      if (!shown) onShown();
+      this.frequency.dismissed();
+      // Some mediated networks deliver their reward callback immediately after dismissal.
+      dismissalTimer = setTimeout(() => finish(earned), format === 'rewarded' ? 300 : 0);
+    };
+    const onFailed = () => { if (shown) this.frequency.dismissed(); finish(earned); };
+    const onReward = (reward: { amount: number }) => {
+      if (Number.isFinite(reward?.amount) && reward.amount > 0) earned = true;
+    };
     try {
-      await AdMob.removeBanner();
-      this.log('Banner hidden.');
-    } catch (err) {
-      this.log('Error removing banner:', err);
+      const registrations = format === 'rewarded' ? [
+        AdMob.addListener(RewardAdPluginEvents.Showed, onShown),
+        AdMob.addListener(RewardAdPluginEvents.Rewarded, onReward),
+        AdMob.addListener(RewardAdPluginEvents.Dismissed, onDismissed),
+        AdMob.addListener(RewardAdPluginEvents.FailedToShow, onFailed),
+      ] : [
+        AdMob.addListener(InterstitialAdPluginEvents.Showed, onShown),
+        AdMob.addListener(InterstitialAdPluginEvents.Dismissed, onDismissed),
+        AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, onFailed),
+      ];
+      // Install every callback before invoking the native show method.
+      const registered = await Promise.allSettled(registrations);
+      for (const result of registered) if (result.status === 'fulfilled') handles.push(result.value);
+      const failed = registered.find((result) => result.status === 'rejected');
+      if (failed?.status === 'rejected') throw failed.reason;
+      if (!canShow() || !this.canRequest()) return false;
+      this.slots[format].loadedAt = null;
+      this._fullScreenShowing.set(true);
+      this.music.setAdPaused(true);
+      await this.hideBanner();
+      if (!canShow() || !this.canRequest()) return false;
+      if (format === 'rewarded') {
+        void AdMob.showRewardVideoAd().then(onReward).catch(() => { if (!shown) onFailed(); });
+      } else {
+        void AdMob.showInterstitial().catch(onFailed);
+      }
+      // A reward callback alone must not unlock navigation while the ad is still visible.
+      return await completion;
+    } finally {
+      if (dismissalTimer) clearTimeout(dismissalTimer);
+      await Promise.all(handles.map((handle) => handle.remove().catch(() => undefined)));
+      this._fullScreenShowing.set(false);
+      this.music.setAdPaused(false);
     }
   }
 
-  private async preloadInterstitial(): Promise<void> {
-    if (this.interstitialReady || this.interstitialLoading) return this.interstitialLoading;
+  private bannerAllowed(): boolean {
+    return environment.features.adsEnabled && environment.features.bannerAdsEnabled && BANNER_SCREENS.has(this.screen)
+      && this.foreground() && !this.fullScreenInFlight && !this.overlayOpen()
+      && !this.bannerNeedsNewVisit && (this.bannerWindowEndsAt === 0 || Date.now() < this.bannerWindowEndsAt)
+      && (!this.isNative || this.canRequest());
+  }
 
-    this.interstitialLoading = (async () => {
-      try {
-        const adId = AD_UNIT_IDS.interstitial;
-        this.log('Preloading interstitial with adId:', adId);
-        await AdMob.prepareInterstitial({ adId });
-        this.interstitialReady = true;
-        this.log('Interstitial ready.');
-      } catch (err) {
-        this.interstitialReady = false;
-        this.log('Interstitial preload failed:', err);
-      } finally {
-        this.interstitialLoading = undefined;
+  private overlayOpen(): boolean {
+    for (const overlay of this.overlays) if (overlay instanceof Node && !overlay.isConnected) this.overlays.delete(overlay);
+    return this.overlays.size > 0;
+  }
+
+  private queueBanner(): void {
+    this.bannerQueue = this.bannerQueue.then(() => this.updateBanner()).catch((error: unknown) => this.log('Banner update deferred.', error));
+  }
+
+  private async updateBanner(): Promise<void> {
+    if (!this.bannerAllowed()) { await this.hideBanner(); return; }
+    if (!this.isNative) { this._bannerHeight.set(50); return; }
+    if (!this.bannerExists && Date.now() < this.bannerNextAttemptAt) {
+      this.scheduleRetry(this.bannerNextAttemptAt);
+      return;
+    }
+    await this.registerBannerListeners();
+    if (!this.bannerAllowed()) { await this.hideBanner(); return; }
+    const needsWindow = this.bannerWindowEndsAt === 0;
+    if (needsWindow && !this.frequency.canStartBannerWindow()) { this._bannerHeight.set(0); return; }
+    if (!this.bannerExists && !this.frequency.reserveRequest('banner')) {
+      this._bannerHeight.set(0);
+      this.scheduleRetry(this.frequency.nextRequestAllowedAt('banner'));
+      return;
+    }
+    if (needsWindow) {
+      if (!this.frequency.reserveBannerWindow()) { this._bannerHeight.set(0); return; }
+      this.bannerWindowEndsAt = Date.now() + AD_POLICY.bannerWindowMs;
+      this.bannerWindowTimer = setTimeout(() => {
+        this.bannerWindowEndsAt = 0;
+        this.bannerNeedsNewVisit = true;
+        void this.hideBanner();
+      }, AD_POLICY.bannerWindowMs);
+    }
+    // This space is outside the router outlet: content can never scroll underneath the ad.
+    this._bannerHeight.set(Math.max(this.bannerHeight(), AD_POLICY.bannerReserveHeight));
+    try {
+      if (this.bannerExists) {
+        if (!this.bannerVisible) await AdMob.resumeBanner();
+      } else {
+        this.bannerExists = true;
+        await this.withTimeout(AdMob.showBanner({
+          adId: AD_UNIT_IDS.banner, adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER, isTesting: !environment.production,
+        }));
       }
+      this.bannerVisible = true;
+      if (!this.bannerAllowed()) await this.hideBanner();
+    } catch (error) {
+      this.bannerExists = false;
+      this.bannerVisible = false;
+      await AdMob.removeBanner().catch(() => undefined);
+      this.bannerNextAttemptAt = Date.now() + this.backoff(++this.bannerFailures);
+      this.scheduleRetry(this.bannerNextAttemptAt);
+      this._bannerHeight.set(0);
+      this.log('Banner unavailable.', error);
+    }
+  }
+
+  private registerBannerListeners(): Promise<void> {
+    this.bannerListeners ??= (async () => {
+      const registrations = [
+        AdMob.addListener(BannerAdPluginEvents.SizeChanged, ({ height }) => {
+          if (height > 0 && this.bannerAllowed()) this._bannerHeight.set(Math.max(AD_POLICY.bannerReserveHeight, height));
+        }),
+        AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+          this.bannerFailures = 0;
+          this.queueBanner();
+        }),
+        AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
+          this.bannerExists = false;
+          this.bannerVisible = false;
+          this._bannerHeight.set(0);
+          this.bannerNextAttemptAt = Date.now() + this.backoff(++this.bannerFailures);
+          this.scheduleRetry(this.bannerNextAttemptAt);
+        }),
+      ];
+      await Promise.all(registrations.map(async (registration) => {
+        const handle = await registration;
+        if (this.destroyed) await handle.remove();
+        else this.bannerHandles.push(handle);
+      }));
     })();
-
-    return this.interstitialLoading;
+    return this.bannerListeners;
   }
 
-  private async preloadRewarded(): Promise<void> {
-    if (this.rewardedReady || this.rewardedLoading) return this.rewardedLoading;
-
-    this.rewardedLoading = (async () => {
-      try {
-        const adId = AD_UNIT_IDS.rewarded;
-        this.log('Preloading rewarded ad with adId:', adId);
-        await AdMob.prepareRewardVideoAd({ adId });
-        this.rewardedReady = true;
-        this.log('Rewarded ad ready.');
-      } catch (err) {
-        this.rewardedReady = false;
-        this.log('Rewarded preload failed:', err);
-      } finally {
-        this.rewardedLoading = undefined;
-      }
-    })();
-
-    return this.rewardedLoading;
+  private invalidateAds(): void {
+    this.adGeneration++;
+    this.slots.interstitial.loadedAt = null;
+    this.slots.rewarded.loadedAt = null;
+    if (this.bannerExists) void AdMob.removeBanner().catch(() => undefined);
+    this.bannerExists = false;
+    this.bannerVisible = false;
   }
 
-  /**
-   * Resolves true ONLY once AdMob confirms the reward was actually earned — either via the
-   * plugin's own `showRewardVideoAd()` promise (which resolves with the earned reward) or
-   * the `Rewarded` event, whichever arrives first.
-   *
-   * A dismissal timer ensures dismissal events cannot prematurely discard a confirmed reward.
-   */
-  private awaitRewardConfirmation(): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
-      let rewardEarned = false;
-      let settled = false;
-      let dismissalTimer: ReturnType<typeof setTimeout> | null = null;
-      const handles: Promise<PluginListenerHandle>[] = [];
-      const cleanup = () => {
-        if (dismissalTimer !== null) clearTimeout(dismissalTimer);
-        handles.forEach((h) => h.then((handle) => handle.remove()).catch(() => {}));
-      };
-      const finish = (granted: boolean) => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        this.log('Reward flow finished, granted:', granted);
-        resolve(granted);
-      };
-
-      // 1. Explicit rewarded event from plugin listener
-      handles.push(
-        AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
-          this.log('RewardAdPluginEvents.Rewarded received.');
-          rewardEarned = true;
-          finish(true);
-        }),
-      );
-
-      // 2. Plugin call promise resolution
-      AdMob.showRewardVideoAd()
-        .then(() => {
-          this.log('showRewardVideoAd promise resolved successfully.');
-          rewardEarned = true;
-          finish(true);
-        })
-        .catch((err) => {
-          this.log('showRewardVideoAd promise error:', err);
-          if (!rewardEarned) finish(false);
-        });
-
-      // 3. Ad dismissed / closed by user
-      handles.push(
-        AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-          this.log('RewardAdPluginEvents.Dismissed received. rewardEarned:', rewardEarned);
-          if (rewardEarned) {
-            finish(true);
-          } else {
-            // Give 300ms grace period in case Rewarded event arrives right around dismissal
-            dismissalTimer = setTimeout(() => {
-              finish(rewardEarned);
-            }, 300);
-          }
-        }),
-      );
-
-      // 4. Failed to show
-      handles.push(
-        AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
-          this.log('RewardAdPluginEvents.FailedToShow received:', err);
-          if (!rewardEarned) finish(false);
-        }),
-      );
-    });
+  private backoff(failures: number): number {
+    return Math.min(AD_POLICY.retryMaxMs, AD_POLICY.retryBaseMs * Math.pow(2, Math.min(failures - 1, 5)));
   }
 
-  private awaitInterstitialDismissal(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      let settled = false;
-      const handles: Promise<PluginListenerHandle>[] = [];
-      const cleanup = () => handles.forEach((h) => h.then((handle) => handle.remove()).catch(() => {}));
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        resolve();
-      };
-
-      handles.push(AdMob.addListener(InterstitialAdPluginEvents.Dismissed, finish));
-      handles.push(AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, finish));
-
-      AdMob.showInterstitial().catch(finish);
-    });
+  private scheduleRetry(at: number): void {
+    if (!this.isNative || !this.foreground() || !environment.features.adsEnabled || this.retryAt <= at) return;
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryAt = at;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = undefined;
+      this.retryAt = Infinity;
+      if (this.foreground()) void this.initialize().then(() => { this.preloadFormats(); this.queueBanner(); });
+    }, Math.max(1000, at - Date.now()));
   }
 
-  private timeout(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, AD_LOAD_TIMEOUT_MS));
+  private async withTimeout<T>(promise: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([promise, new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Ad load timed out')), AD_LOAD_TIMEOUT_MS);
+      })]);
+    } finally { if (timer) clearTimeout(timer); }
   }
 
   private log(...args: unknown[]): void {
-    if (!environment.production || (environment as { debug?: boolean }).debug) {
-      console.log('[AdMob]', ...args);
-    }
+    if (!environment.production) console.log('[AdMob]', ...args);
   }
 }

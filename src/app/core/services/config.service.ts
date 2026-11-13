@@ -45,45 +45,36 @@ interface GameConfig {
 export class ConfigService {
   private readonly http = inject(HttpClient);
 
-  private rewardConfig?: RewardConfig;
-  private powerUpConfig?: PowerUpConfig;
-  private themeConfig?: ThemeConfig;
-  private gameConfig?: GameConfig;
+  private readonly requests = new Map<string, Promise<unknown>>();
 
   async getRewardConfig(): Promise<RewardConfig> {
-    if (!this.rewardConfig) {
-      this.rewardConfig = await firstValueFrom(
-        this.http.get<RewardConfig>('assets/config/reward-config.json'),
-      );
-    }
-    return this.rewardConfig;
+    return this.load<RewardConfig>('reward-config.json');
   }
 
   async getPowerUpConfig(): Promise<PowerUpConfig> {
-    if (!this.powerUpConfig) {
-      this.powerUpConfig = await firstValueFrom(
-        this.http.get<PowerUpConfig>('assets/config/powerup-config.json'),
-      );
-    }
-    return this.powerUpConfig;
+    return this.load<PowerUpConfig>('powerup-config.json');
   }
 
   async getThemeConfig(): Promise<ThemeConfig> {
-    if (!this.themeConfig) {
-      this.themeConfig = await firstValueFrom(
-        this.http.get<ThemeConfig>('assets/config/theme-config.json'),
-      );
-    }
-    return this.themeConfig;
+    return this.load<ThemeConfig>('theme-config.json');
   }
 
   async getGameConfig(): Promise<GameConfig> {
-    if (!this.gameConfig) {
-      this.gameConfig = await firstValueFrom(
-        this.http.get<GameConfig>('assets/config/game-config.json'),
-      );
+    return this.load<GameConfig>('game-config.json');
+  }
+
+  private async load<T>(file: string): Promise<T> {
+    let request = this.requests.get(file) as Promise<T> | undefined;
+    if (!request) {
+      request = firstValueFrom(this.http.get<T>(`assets/config/${file}`));
+      this.requests.set(file, request);
     }
-    return this.gameConfig;
+    try {
+      return await request;
+    } catch (error) {
+      if (this.requests.get(file) === request) this.requests.delete(file);
+      throw error;
+    }
   }
 }
 

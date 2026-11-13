@@ -4,7 +4,6 @@ import { firstValueFrom } from 'rxjs';
 import { GameRewardApiService, GameRewardResult } from './game-reward-api.service';
 import {
   GameRewardSubmission,
-  RedeemApiErrorEnvelope,
   RedeemRequest,
   RedeemResponse,
 } from '../models/economy.models';
@@ -17,11 +16,6 @@ const PROCESSED_KEYS_KEY = 'arrow_rush.processed_reward_keys';
 // after submission, not to log an indefinite history — kept short to keep device storage
 // small, matching CoinService's transaction history cap for the same reason.
 const MAX_TRACKED_KEYS = 40;
-
-interface ApiSuccessEnvelope<T> {
-  success: true;
-  data: T;
-}
 
 export class RedeemApiError extends Error {
   constructor(

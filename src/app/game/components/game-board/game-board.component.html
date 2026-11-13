@@ -1,11 +1,13 @@
 <div
   class="game-board"
+  role="group"
+  aria-label="Puzzle board. Tap an arrow with a clear path to the edge."
   [style.gridTemplateColumns]="'repeat(' + state.columns + ', 1fr)'"
   [style.gridTemplateRows]="'repeat(' + state.rows + ', 1fr)'"
   [style.aspectRatio]="state.columns + ' / ' + state.rows"
 >
-  @for (i of cellIndices; track i) {
-    <div class="cell-bg"></div>
+  @for (cell of cells; track $index) {
+    <div class="cell-bg" [style.gridRow]="cell.row" [style.gridColumn]="cell.column"></div>
   }
 
   @for (obstacle of state.obstacles; track obstacle.id) {
@@ -20,6 +22,7 @@
         [block]="block"
         [isHinted]="block.id === hintedBlockId"
         [isShaking]="block.id === shakingBlockId"
+        [disabled]="disabled"
         (tap)="onTap($event)"
       ></app-arrow-block>
     </div>
@@ -27,7 +30,7 @@
 
   @for (ghost of ghosts; track ghost.key) {
     <div class="grid-item ghost" [style.gridRow]="ghost.block.row + 1" [style.gridColumn]="ghost.block.column + 1">
-      <app-arrow-block [block]="ghost.block" [isEscaping]="true"></app-arrow-block>
+      <app-arrow-block [block]="ghost.block" [isEscaping]="true" [disabled]="true" aria-hidden="true"></app-arrow-block>
     </div>
   }
 </div>

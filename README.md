@@ -14,8 +14,9 @@ slid off the board in their pointing direction to clear each level.
 
 This project was scaffolded with the Ionic CLI (`ionic start`, Angular type, Capacitor
 integration, blank template) directly on the versions above — no downgrades were needed for
-Node 24 compatibility. Components/pages follow the same non-standalone NgModule + lazy-route
-pattern the scaffold ships with (see `AppRoutingModule` and each feature's own `*.module.ts`).
+Node 24 compatibility. Pages retain NgModules and lazy routes. Shared widgets are standalone
+and imported only by the screens that use them. Ionic widgets use their component-specific
+entry points so unused controls and the full lazy-widget registry are excluded from the build.
 
 ## Development
 
@@ -28,6 +29,9 @@ npm start          # ng serve, http://localhost:4200
 
 ```bash
 npm test
+npm run lint
+npm run build
+npm run test:smoke  # headless browser check; requires installed Chrome (or CHROME_PATH)
 ```
 
 Unit tests focus on the parts that are riskiest to get wrong silently: the puzzle engine
@@ -35,6 +39,16 @@ Unit tests focus on the parts that are riskiest to get wrong silently: the puzzl
 reward guard in `LocalGameRewardApiService` (a repeated `idempotencyKey` — from a double tap or
 a retried callback — must never credit coins twice). See `src/app/core/game-engine/*.spec.ts`
 and `src/app/core/services/{coin,local-game-reward-api}.service.spec.ts`.
+
+Audio uses one shared Web Audio context. Original menu, puzzle, and daily-challenge tracks
+are rendered once per session and played as cached loops, with separate saved effects and
+music volumes in Settings. Playback starts after a user gesture. Pausing, leaving gameplay,
+or backgrounding the app stops the game music; returning from the background requires Resume.
+
+The browser check covers audio playback, volume controls, responsive boards, moves, paused
+navigation through Settings, completion, and the full scrolling level map. Screenshots are saved
+in `.tmp/smoke/`. Android speaker quality and native interruption behavior still need a
+device check after `npx cap sync android`.
 
 ## Production build
 
@@ -51,18 +65,18 @@ npx cap open android    # requires Android Studio + SDK, not verifiable from thi
 ```
 
 The `android/` platform is already added and synced against the current build (app name "Arrow
-Rush", package `com.arrowrush.game`). Building/signing the actual APK requires Android Studio and
+Rush", package `com.admobility.arrowrush`). Building/signing the actual APK requires Android Studio and
 the Android SDK on the machine doing the build.
 
 ## Level data and the generator
 
-100 levels ship in `src/assets/levels/level-*.json`, indexed by `levels-index.json` for the level
+520 levels ship in `src/assets/levels/level-*.json`, indexed by `levels-index.json` for the level
 map screen. Rather than hand-authoring puzzles or dropping blocks in fully at random (which risks
 producing an unsolvable board), `scripts/generate-levels.mjs` builds each level with a **reverse
 construction** technique: blocks are placed on the grid in the reverse of their intended escape
 order, so every block's exit path only ever has to dodge obstacles and blocks that are already
 down — which guarantees at least one valid solve order exists by construction, while still
-letting difficulty (grid size, block/obstacle counts, time limit) scale smoothly across 100
+letting difficulty (grid size, block/obstacle counts, time limit) scale smoothly across 520
 levels via `EASY → MEDIUM → HARD → EXPERT`. The same algorithm (minus the JSON writing) powers the
 in-game Shuffle power-up (`ShuffleService`), so a shuffled board is never a soft-lock either.
 
@@ -94,41 +108,67 @@ npm run levels:verify     # brute-force re-check every generated level is actual
 - `src/app/levels/`, `home/`, `store/`, `profile/`, `settings/`, `daily-challenge/`, `themes/` —
   lazy-loaded feature pages.
 - `src/app/shared/` — cross-page components (`coin-balance`, `level-card`, `theme-card`,
-  `power-up-button`, `confirm-dialog`, `ad-banner`).
+  `power-up-button`, `coin-icon`, `ad-banner`), imported directly without a catch-all module.
 - `src/assets/config/` — tunable numbers (power-up costs/starting counts, theme prices, reward
   amounts, coin conversion placeholders) so none of that is hardcoded in components.
 
 State is Angular signals throughout — no NgRx, no mixing with RxJS subjects for the same state.
+
+Startup uses Angular's AOT `platformBrowser` bootstrap. Idle preloading warms only gameplay
+and the level map; Store, Profile, Settings, Themes, and Daily Challenge load when opened.
+The full 520-level map precomputes row alignment when its index changes. Shuffle reuses the
+move validator's occupancy scan instead of allocating a path array for every placement attempt.
+TypeScript rejects unused locals and parameters during builds to help prevent dead code returning.
 
 ## Coin & reward architecture
 
 Score and coins are tracked separately: `ScoreService` only ever reads best scores back from
 `LevelService`'s progress records, and `CoinService` is the *only* place that mutates the coin
 balance, always paired with a `CoinTransaction` (type, amount, source, timestamp) for an audit
-trail. Coins are local-only today, but the seam for a future centralized backend is already in
-place: `GameRewardApiService` (abstract) / `LocalGameRewardApiService` (the local stand-in,
-registered in `AppModule`) mirrors the shape the real API will need — `submitGameReward` takes a
-`gameCode` (`ARROW_RUSH`) and an `idempotencyKey`, and duplicate keys are rejected rather than
-re-credited. `redeemCoins` throws until `environment.features.redemptionEnabled` is turned on *and*
-a real backend is wired in — the frontend never computes a rupee amount itself; it only ever
-reads `amountCredited` back from a response. Swapping in the real backend later means writing one
-new class and changing one `provide` line in `AppModule` — no call sites change.
+trail. `GameRewardApiService` / `LocalGameRewardApiService` credits gameplay rewards locally
+with an idempotency key to reject repeated completion submissions. Production redemption
+remains enabled: Profile submits the existing game code, mobile number, coins, and idempotency
+key to `POST {apiBaseUrl}/redeem`. The UI displays the backend's `amountCredited` in rupees and
+deducts only its confirmed `coinsRedeemed`; it never calculates a cash payout locally.
+Rewarded ads grant separate game-only items, so they do not add to this redeemable balance.
 
 ## Ads architecture
 
-Every ad call goes through the abstract `AdService` (`showRewardedAd` / `showInterstitialAd` /
-`showBanner` / `hideBanner`); `MockAdService` is the only implementation wired up right now
-(`AppModule`'s `{ provide: AdService, useClass: MockAdService }`), and it only resolves a granted
-reward from a single confirmed point — matching the shape a real AdMob callback has — so no
-caller ever gets rewarded just because an ad started loading. All ad features
-(`features.adsEnabled`, `rewardedAdsEnabled`, `interstitialAdsEnabled`, `bannerAdsEnabled`) default
-to `false` in both `environment.ts` and `environment.prod.ts`.
+`AppModule` provides the native `AdMobService` behind `AdService`. It requests UMP consent
+eligibility before loading ads, exposes required privacy options in Settings, preloads and
+expires full-screen ads, backs off on no-fill, and serializes full-screen presentations.
+`AdFrequencyService` persists rolling hourly/daily display and app-initiated request caps.
+Interstitials require five distinct rounds and five minutes between full-screen ads, with
+at most three per hour and six per day. Rewarded ads have a one-minute cooldown, six-per-hour
+and twelve-per-day caps; all full-screen formats share a six-per-hour/twelve-per-day cap.
+Interstitials are considered once per finished
+round, before result-screen navigation buttons; they are skipped if not already ready.
+A single adaptive banner uses a reserved footer outside the router outlet on menu screens.
+Native banners have one-minute exposure windows, a ten-minute interval between windows,
+and require a new eligible menu visit after expiry. Request failures back off for 5-30 minutes.
+Rewarded ads grant non-transferable in-game items, never cash-redeemable coins. Production
+browser previews cannot earn mock ad rewards. Development builds use Google's sample units.
+
+See [the release checklist](docs/admob/RELEASE-CHECKLIST.md) for console configuration,
+privacy messages, app-ads.txt publication, traffic monitoring, and device QA. No placement
+or frequency setting guarantees revenue or immunity from account enforcement.
+
+```powershell
+npm.cmd run build -- --configuration development  # existing environment.ts uses Google test units
+.\node_modules\.bin\cap.cmd sync android
+```
+
+After QA, run the normal production build and resync before preparing a signed release.
+Only the existing `environment.ts` and `environment.prod.ts` are used. Developer/test-device
+hashes can be added to `ads.testingDevices` in these files, or registered through AdMob.
+Never test your own live ads. See the checklist for account-level serving-limit recovery:
+local caps do not remove Google's invalid-traffic restriction.
 
 ## What's intentionally not real yet
 
-- **AdMob**: only the mock provider exists; wiring a real AdMob Capacitor plugin is future work
-  behind the same `AdService` interface.
-- **Redemption backend**: `LocalGameRewardApiService.redeemCoins` always throws — there is no
-  server to talk to.
+- **AdMob console access**: account readiness, consent-message publication, website
+  app-ads.txt verification, and live device impressions cannot be confirmed by a local build.
+- **Wallet verification**: redemption calls the configured external reward API; its security,
+  historical balances, and payment processing are outside this frontend's verification.
 - **Push notifications**, **Hindi localization strings**: the `AppSettings`/language plumbing
   exists (`SettingsService`), but only English copy is written in the templates today.

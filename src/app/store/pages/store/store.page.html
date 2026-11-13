@@ -15,21 +15,21 @@
     <div class="ad-reward-card">
       <ion-icon name="play-circle" class="ad-reward-icon"></ion-icon>
       <div class="ad-reward-info">
-        <span class="ad-reward-title">Free Coins</span>
-        <span class="ad-reward-desc">Watch a short ad to earn coins — no cost, no catch.</span>
+        <span class="ad-reward-title">Get +1 Hint</span>
+        <span class="ad-reward-desc">Optional ad. One hint to use in your puzzles.</span>
       </div>
       <ion-button
         size="small"
         color="primary"
         [disabled]="isWatchingAd()"
-        (click)="onWatchAdForCoins()"
+        (click)="onWatchAdForHint()"
       >
-        <app-coin-icon slot="start"></app-coin-icon>
-        {{ isWatchingAd() ? 'Loading…' : '+' + watchAdCoins() }}
+        <ion-icon name="play-circle" slot="start"></ion-icon>
+        {{ isWatchingAd() ? 'Loading…' : 'Watch ad' }}
       </ion-button>
     </div>
-    @if (adFailedMessage()) {
-      <p class="error ad-error">{{ adFailedMessage() }}</p>
+    @if (adMessage()) {
+      <p class="ad-error" [class.error]="adError()" role="status">{{ adMessage() }}</p>
     }
   }
 
@@ -66,6 +66,4 @@
 
   <h2 class="section-title">Cosmetics</h2>
   <p class="empty-state">More cosmetics are coming soon.</p>
-
-  <app-ad-banner></app-ad-banner>
 </ion-content>

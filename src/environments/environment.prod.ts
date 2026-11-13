@@ -19,7 +19,9 @@ export const environment = {
   },
 
   ads: {
-    interstitialLevelInterval: 3,
+    interstitialLevelInterval: 5,
+    // Registered devices receive test ads even when using production ad unit IDs.
+    testingDevices: [] as string[],
   },
 
   earnivo: {

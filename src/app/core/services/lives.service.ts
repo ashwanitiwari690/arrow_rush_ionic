@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ConfigService } from './config.service';
 
@@ -27,9 +27,16 @@ export class LivesService {
   private regenMs = 10 * 60 * 1000;
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private record: LivesRecord | null = null;
+  private regenTimer: ReturnType<typeof setTimeout> | null = null;
+  private persistQueue = Promise.resolve();
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => { if (this.regenTimer !== null) clearTimeout(this.regenTimer); });
+  }
 
   async init(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) { if (this.record) this.applyRegen(this.record); return; }
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
@@ -48,6 +55,7 @@ export class LivesService {
   }
 
   hasLives(): boolean {
+    if (this.record) this.applyRegen(this.record);
     return this._count() > 0;
   }
 
@@ -56,10 +64,8 @@ export class LivesService {
     if (this._count() <= 0) return;
 
     const nextCount = this._count() - 1;
-    this._count.set(nextCount);
-    const record: LivesRecord = { count: nextCount, lastRegenAt: Date.now() };
-    this._nextRegenAt.set(nextCount < this.maxLives ? record.lastRegenAt + this.regenMs : null);
-    await this.storage.set(LIVES_KEY, record);
+    this.applyRegen({ count: nextCount, lastRegenAt: this._count() >= this.maxLives ? Date.now() : this.record?.lastRegenAt ?? Date.now() });
+    await this.persist();
   }
 
   /** Grants +1 life, capped at maxLives. Call only after a rewarded ad's completion is
@@ -67,10 +73,8 @@ export class LivesService {
   async grantLife(): Promise<void> {
     await this.init();
     const nextCount = Math.min(this.maxLives, this._count() + 1);
-    this._count.set(nextCount);
-    const record: LivesRecord = { count: nextCount, lastRegenAt: Date.now() };
-    this._nextRegenAt.set(nextCount < this.maxLives ? record.lastRegenAt + this.regenMs : null);
-    await this.storage.set(LIVES_KEY, record);
+    this.applyRegen({ count: nextCount, lastRegenAt: nextCount >= this.maxLives ? Date.now() : this.record?.lastRegenAt ?? Date.now() });
+    await this.persist();
   }
 
   private applyRegen(record: LivesRecord): void {
@@ -87,5 +91,21 @@ export class LivesService {
 
     this._count.set(count);
     this._nextRegenAt.set(count < this.maxLives ? lastRegenAt + this.regenMs : null);
+    this.record = { count, lastRegenAt };
+    if (this.regenTimer !== null) clearTimeout(this.regenTimer);
+    this.regenTimer = null;
+    if (count < this.maxLives) {
+      this.regenTimer = setTimeout(() => {
+        if (this.record) this.applyRegen(this.record);
+        void this.persist().catch(() => undefined);
+      }, Math.max(100, lastRegenAt + this.regenMs - Date.now()));
+    }
+  }
+
+  private persist(): Promise<void> {
+    const snapshot = this.record ? { ...this.record } : null;
+    if (!snapshot) return Promise.resolve();
+    this.persistQueue = this.persistQueue.catch(() => undefined).then(() => this.storage.set(LIVES_KEY, snapshot));
+    return this.persistQueue;
   }
 }

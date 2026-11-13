@@ -1,11 +1,14 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { ThemeService } from './core/services/theme.service';
 import { SettingsService } from './core/services/settings.service';
 import { MusicService } from './core/services/music.service';
+import { AudioService } from './core/services/audio.service';
+import { SoundService } from './core/services/sound.service';
 import { AppVerificationService } from './core/services/app-verification.service';
 import { AdService } from './core/services/ad.service';
 import { ConnectivityService } from './core/services/connectivity.service';
@@ -22,11 +25,13 @@ export class AppComponent implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly settingsService = inject(SettingsService);
   private readonly musicService = inject(MusicService);
+  private readonly audio = inject(AudioService);
+  private readonly sound = inject(SoundService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly appVerificationService = inject(AppVerificationService);
   private readonly adService = inject(AdService);
   readonly connectivity = inject(ConnectivityService);
 
-  private audioUnlocked = false;
   private currentUrl = '/home';
 
   ngOnInit(): void {
@@ -46,32 +51,51 @@ export class AppComponent implements OnInit {
       void this.adService.initialize();
     }
 
-    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
+    this.adService.setScreen(this.router.url);
+    this.router.events.pipe(filter((event) => event instanceof NavigationStart), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.adService.setScreen('');
+    });
+
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
       this.currentUrl = (event as NavigationEnd).urlAfterRedirects;
-      const track = this.currentUrl.startsWith('/game-play') ? 'gameplay' : 'menu';
-      this.musicService.start(track);
+      this.adService.setScreen(this.currentUrl);
+      // Gameplay owns its soundtrack so returning to a paused level stays silent.
+      if (!this.currentUrl.startsWith('/game-play')) this.musicService.start('menu');
     });
 
     if (Capacitor.isNativePlatform()) {
       // Android hardware back button: same "always returns toward Home" model as the
       // in-app Home/Exit buttons, and exits the app once already there — the standard
       // expected behavior for an Android game rather than silently doing nothing.
-      App.addListener('backButton', () => {
+      const backListener = App.addListener('backButton', () => {
+        if (this.adService.fullScreenShowing()) return;
         if (this.currentUrl === '/home') {
           void App.exitApp();
         } else {
           void this.router.navigateByUrl('/home');
         }
       });
+      const stateListener = App.addListener('appStateChange', ({ isActive }) => this.audio.setAppActive(isActive));
+      this.destroyRef.onDestroy(() => {
+        void backListener.then((listener) => listener.remove());
+        void stateListener.then((listener) => listener.remove());
+      });
     }
   }
 
-  @HostListener('document:click')
-  @HostListener('document:touchstart')
+  @HostListener('document:pointerdown')
+  @HostListener('document:keydown')
   onFirstUserGesture(): void {
-    if (this.audioUnlocked) return;
-    this.audioUnlocked = true;
     this.musicService.unlock();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onInterfaceClick(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest('button, ion-button');
+    if (!button || button.closest('app-arrow-block, app-power-up-button') || button.hasAttribute('disabled')) return;
+    this.sound.play('buttonClick');
   }
 
   onTryAgain(): void {

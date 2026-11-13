@@ -1,7 +1,6 @@
-@if (bannerAdsEnabled) {
-  <div class="ad-banner" [class.preview]="!isNative">
-    @if (!isNative) {
-      <span>Advertisement</span>
-    }
+@if (height() > 0) {
+  <div class="ad-separator" aria-hidden="true"></div>
+  <div class="ad-banner" [class.preview]="!isNative" [style.height.px]="height()">
+    @if (!isNative) { <span>Advertisement</span> }
   </div>
 }

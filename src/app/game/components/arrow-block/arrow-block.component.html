@@ -1,10 +1,12 @@
 <button
   type="button"
+  [attr.data-block-id]="block.id"
   class="arrow-block"
   [class]="'color-' + block.color"
   [class.shaking]="isShaking"
   [class.hinted]="isHinted"
   [ngClass]="escapeClass"
+  [disabled]="disabled"
   (click)="tap.emit(block.id)"
   [attr.aria-label]="'Arrow pointing ' + (block.direction | lowercase) + ', color ' + block.color"
 >

@@ -38,10 +38,6 @@ export class PowerupService {
     return this.initPromise;
   }
 
-  has(type: PowerUpType): boolean {
-    return this._counts()[type] > 0;
-  }
-
   /** Consumes one use. Returns false if none were available. */
   async use(type: PowerUpType): Promise<boolean> {
     await this.init();

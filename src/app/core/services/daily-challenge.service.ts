@@ -3,6 +3,7 @@ import { DailyChallengeStatus } from '../models/economy.models';
 import { StorageService } from './storage.service';
 import { ConfigService } from './config.service';
 import { CoinService } from './coin.service';
+import { PowerupService } from './powerup.service';
 
 const DAILY_KEY = 'arrow_rush.daily_challenge';
 const MAX_ATTEMPTS = 3;
@@ -25,6 +26,8 @@ export class DailyChallengeService {
   private readonly storage = inject(StorageService);
   private readonly config = inject(ConfigService);
   private readonly coins = inject(CoinService);
+  private readonly powerups = inject(PowerupService);
+  private claimingAdBonus = false;
 
   private readonly _status = signal<DailyChallengeStatus | null>(null);
   readonly status = this._status.asReadonly();
@@ -81,20 +84,18 @@ export class DailyChallengeService {
     return true;
   }
 
-  /** Grants a second, equal payout on top of the already-claimed daily reward. Call only
-   * after a rewarded ad's completion is confirmed — never speculatively. Capped at once per
-   * day via `bonusClaimed`. */
+  /** One non-transferable shuffle per day, only after a confirmed rewarded ad. */
   async claimAdBonus(): Promise<boolean> {
     const status = this._status();
-    if (!status || !status.rewardClaimed || status.bonusClaimed) return false;
-
-    const rewardConfig = await this.config.getRewardConfig();
-    await this.coins.addCoins(rewardConfig.dailyChallengeReward.coins, 'AD_REWARD', 'daily_challenge_bonus');
-
-    const next: DailyChallengeStatus = { ...status, bonusClaimed: true };
-    this._status.set(next);
-    await this.storage.set(DAILY_KEY, next);
-    return true;
+    if (!status || !status.rewardClaimed || status.bonusClaimed || this.claimingAdBonus) return false;
+    this.claimingAdBonus = true;
+    try {
+      await this.powerups.grant('SHUFFLE', 1);
+      const next: DailyChallengeStatus = { ...this._status()!, bonusClaimed: true };
+      this._status.set(next);
+      await this.storage.set(DAILY_KEY, next);
+      return true;
+    } finally { this.claimingAdBonus = false; }
   }
 
   attemptsRemaining(): number {

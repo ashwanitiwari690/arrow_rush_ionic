@@ -25,7 +25,9 @@ export const environment = {
 
   ads: {
     // How many completed levels between interstitials. Configurable, never a fixed literal in components.
-    interstitialLevelInterval: 3,
+    interstitialLevelInterval: 5,
+    // Add the hashed device IDs printed by Google's SDK for your own testing devices.
+    testingDevices: [] as string[],
   },
 
   earnivo: {

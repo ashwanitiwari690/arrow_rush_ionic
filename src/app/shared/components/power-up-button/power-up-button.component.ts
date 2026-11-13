@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { IonIcon } from '@ionic/angular/ion-icon';
 
 export type PowerUpAccent = 'hint' | 'undo' | 'shuffle' | 'extra';
 
@@ -6,7 +7,8 @@ export type PowerUpAccent = 'hint' | 'undo' | 'shuffle' | 'extra';
   selector: 'app-power-up-button',
   templateUrl: './power-up-button.component.html',
   styleUrls: ['./power-up-button.component.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [IonIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PowerUpButtonComponent {
@@ -19,6 +21,7 @@ export class PowerUpButtonComponent {
    * being disabled outright — see GamePlayPage.onPowerUp(). */
   @Input() adAvailable = false;
   @Input() isLoadingAd = false;
+  @Input() disabled = false;
   @Output() activate = new EventEmitter<void>();
 
   get isEmpty(): boolean {
@@ -26,7 +29,7 @@ export class PowerUpButtonComponent {
   }
 
   get isDisabled(): boolean {
-    if (this.isLoadingAd) return true;
+    if (this.disabled || this.isLoadingAd) return true;
     return this.isEmpty && !this.adAvailable;
   }
 

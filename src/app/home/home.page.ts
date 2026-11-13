@@ -25,19 +25,22 @@ export class HomePage implements OnInit, OnDestroy {
 
   readonly livesCount = this.livesService.count;
   readonly dailyStatus = this.dailyChallengeService.status;
+  readonly isReady = signal(false);
+  readonly loadError = signal(false);
 
-  totalLevels = 100;
+  readonly totalLevels = signal(0);
   maxLives = 3;
 
   // Ticks once a second so `livesRegenText` can count down live without polling the
   // service — cleaned up in ngOnDestroy so the timer never outlives this page.
   private readonly now = signal(Date.now());
   private regenTimer: ReturnType<typeof setInterval> | null = null;
+  private pageActive = true;
 
   readonly nextLevelId = computed(() => {
     const progress = this.levelService.progress();
     let id = 1;
-    for (let levelId = 1; levelId <= this.totalLevels; levelId++) {
+    for (let levelId = 1; levelId <= this.totalLevels(); levelId++) {
       id = levelId;
       if (!progress[levelId]?.completed) break;
     }
@@ -53,7 +56,7 @@ export class HomePage implements OnInit, OnDestroy {
   );
 
   readonly progressPercent = computed(() =>
-    this.totalLevels > 0 ? Math.min(100, Math.round((this.completedCount() / this.totalLevels) * 100)) : 0,
+    this.totalLevels() > 0 ? Math.min(100, Math.round((this.completedCount() / this.totalLevels()) * 100)) : 0,
   );
 
   readonly dailyRewardReady = computed(() => {
@@ -80,25 +83,52 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([
-      this.coinService.init(),
-      this.levelService.init(),
-      this.themeService.init(),
-      this.livesService.init(),
-    ]);
-    const gameConfig = await this.configService.getGameConfig();
-    this.totalLevels = gameConfig.totalLevels;
-    this.maxLives = gameConfig.livesPerLevel;
-    await this.dailyChallengeService.init(this.totalLevels);
+    this.loadError.set(false);
+    try {
+      await Promise.all([
+        this.coinService.init(),
+        this.levelService.init(),
+        this.themeService.init(),
+        this.livesService.init(),
+      ]);
+      const gameConfig = await this.configService.getGameConfig();
+      this.totalLevels.set(gameConfig.totalLevels);
+      this.maxLives = gameConfig.livesPerLevel;
+      await this.dailyChallengeService.init(this.totalLevels());
+      this.isReady.set(true);
+      this.startClock();
+    } catch {
+      this.loadError.set(true);
+    }
+  }
 
-    this.regenTimer = setInterval(() => this.now.set(Date.now()), 1000);
+  ionViewWillEnter(): void { this.pageActive = true; this.startClock(); }
+
+  ionViewWillLeave(): void {
+    this.pageActive = false;
+    if (this.regenTimer !== null) clearInterval(this.regenTimer);
+    this.regenTimer = null;
+  }
+
+  private startClock(): void {
+    this.now.set(Date.now());
+    if (!this.pageActive || this.regenTimer !== null || this.livesCount() >= this.maxLives) return;
+    this.regenTimer = setInterval(() => {
+      this.now.set(Date.now());
+      if (this.livesCount() >= this.maxLives) {
+        if (this.regenTimer !== null) clearInterval(this.regenTimer);
+        this.regenTimer = null;
+      }
+    }, 1000);
   }
 
   ngOnDestroy(): void {
+    this.pageActive = false;
     if (this.regenTimer !== null) clearInterval(this.regenTimer);
   }
 
   async onPlay(): Promise<void> {
+    if (!this.isReady()) return;
     void this.router.navigate(['/game-play', this.nextLevelId()]);
   }
 

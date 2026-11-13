@@ -5,6 +5,7 @@ import { LocalGameRewardApiService } from './local-game-reward-api.service';
 import { ConfigService } from './config.service';
 import { StorageService } from './storage.service';
 import { environment } from '../../../environments/environment';
+import { CoinService } from './coin.service';
 
 // In-memory StorageService stand-in — avoids depending on Capacitor's web Preferences
 // bridge (which needs a real DOM/localStorage bootstrap) and keeps this test fast and isolated.
@@ -101,6 +102,26 @@ describe('LocalGameRewardApiService — redeemCoins HTTP integration', () => {
     coins: 1000,
     idempotencyKey: 'redeem-1',
   };
+
+  it('keeps gameplay-earned coins redeemable through the existing rupee API', async () => {
+    const coins = TestBed.inject(CoinService);
+    await service.submitGameReward({ gameCode: 'ARROW_RUSH', levelId: 1, score: 500, coins: 100, idempotencyKey: 'played-level' });
+    expect(coins.balance()).toBe(100);
+    const request = { ...payload, coins: 100, idempotencyKey: 'gameplay-redemption' };
+    const pending = service.redeemCoins(request);
+    const http = httpMock.expectOne(`${environment.apiBaseUrl}/redeem`);
+    expect(http.request.method).toBe('POST');
+    expect(http.request.body).toEqual(request);
+    http.flush({ success: true, data: {
+      gameCode: 'ARROW_RUSH', gameName: 'Arrow Rush', coinsSubmitted: 100, coinsRedeemed: 100,
+      coinsPerConversion: 100, rupeesPerConversion: 1, amountCredited: '1.00', transactionId: 'wallet-1',
+      idempotencyKey: 'gameplay-redemption', status: 'COMPLETED', createdAt: new Date().toISOString(), newWalletBalance: '1.00',
+    } });
+    const response = await pending;
+    expect(response.amountCredited).toBe('1.00');
+    await coins.confirmRedemption(response.coinsRedeemed);
+    expect(coins.balance()).toBe(0);
+  });
 
   it('POSTs to {apiBaseUrl}/redeem with the exact request contract and unwraps the response', async () => {
     const promise = service.redeemCoins(payload);

@@ -24,20 +24,20 @@
     </div>
 
     @if (adAvailable) {
-      @if (!coinsDoubled) {
+      @if (!hintClaimed) {
         <ion-button
           expand="block"
           fill="outline"
           color="warning"
           class="double-coins-btn"
           [disabled]="isProcessingAd"
-          (click)="watchAdForDoubleCoins.emit()"
+          (click)="watchAdForHint.emit()"
         >
           <ion-icon slot="start" name="play-circle"></ion-icon>
-          {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad to 2x Coins' }}
+          {{ isProcessingAd ? 'Loading Ad…' : 'Watch Ad for +1 Hint' }}
         </ion-button>
       } @else {
-        <p class="doubled-note">Coins doubled — nice!</p>
+        <p class="doubled-note">+1 Hint added for your next puzzle.</p>
       }
     }
 

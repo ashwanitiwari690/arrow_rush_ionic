@@ -4,6 +4,14 @@ ion-app {
   min-height: 100%;
 }
 
+.app-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 // On wide desktop browser screens only (not on mobile, tablet, or Capacitor Android),
 // optionally frame the app like a phone centered in the window.
 @media (min-width: 992px) and (hover: hover) and (pointer: fine) {

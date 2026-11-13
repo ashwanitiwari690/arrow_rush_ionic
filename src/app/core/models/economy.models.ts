@@ -44,8 +44,7 @@ export interface DailyChallengeStatus {
   maxAttempts: number;
   completed: boolean;
   rewardClaimed: boolean;
-  /** Whether the player already watched a rewarded ad to double today's claimed reward —
-   * caps the bonus at once per day, resetting naturally along with the rest of the record. */
+  /** Whether today's optional rewarded-ad shuffle has already been claimed. */
   bonusClaimed: boolean;
 }
 
@@ -72,11 +71,6 @@ export interface RedeemResponse {
   status: string;
   createdAt: string;
   newWalletBalance: string;
-}
-
-export interface RedeemApiErrorEnvelope {
-  success: false;
-  error: { code: string; message: string };
 }
 
 export interface GameRewardSubmission {

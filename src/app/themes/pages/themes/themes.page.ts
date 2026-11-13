@@ -16,7 +16,6 @@ export class ThemesPage implements OnInit {
 
   readonly themes = signal<ThemeDefinition[]>([]);
   readonly selectedThemeId = this.themeService.selectedThemeId;
-  readonly unlockedThemeIds = this.themeService.unlockedThemeIds;
   readonly balance = this.coinService.balance;
   readonly insufficientFundsFor = signal<string | null>(null);
 

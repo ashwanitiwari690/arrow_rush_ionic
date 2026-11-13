@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/home" text=""></ion-back-button>
     </ion-buttons>
-    <ion-title>500+ Challenging Levels</ion-title>
+    <ion-title>Level map</ion-title>
     <ion-buttons slot="end">
       <app-coin-balance></app-coin-balance>
     </ion-buttons>
@@ -11,6 +11,14 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="level-map-content">
+  @if (isLoading()) {
+    <p class="map-status" role="status">Loading puzzles…</p>
+  } @else if (loadError()) {
+    <div class="map-status" role="alert">
+      <p>Couldn't load the map.</p>
+      <ion-button (click)="ngOnInit()">Try again</ion-button>
+    </div>
+  }
   <div class="path">
     @for (zone of zoneGroups(); track zone.difficulty + zone.levels[0].globalIndex) {
       <div class="zone-section" [class]="zone.style.backgroundClass">
@@ -22,15 +30,13 @@
         @for (entry of zone.levels; track entry.level.levelId) {
           <div
             class="node-row"
-            [class.align-left]="rowOffset(entry.globalIndex) === 'left'"
-            [class.align-center]="rowOffset(entry.globalIndex) === 'center'"
-            [class.align-right]="rowOffset(entry.globalIndex) === 'right'"
+            [class]="entry.alignment"
           >
-            <div [attr.id]="entry.level.levelId === currentLevelId ? 'current-node' : null">
+            <div [attr.id]="entry.level.levelId === currentLevelId() ? 'current-node' : null">
               <app-level-card
                 [level]="entry.level"
                 [progress]="progress()[entry.level.levelId]"
-                [isCurrent]="entry.level.levelId === currentLevelId"
+                [isCurrent]="entry.level.levelId === currentLevelId()"
                 (levelSelected)="onSelectLevel($event)"
               ></app-level-card>
             </div>
@@ -39,6 +45,4 @@
       </div>
     }
   </div>
-
-  <app-ad-banner></app-ad-banner>
 </ion-content>

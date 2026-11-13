@@ -87,14 +87,15 @@
             fill="outline"
             color="warning"
             [disabled]="isWatchingAd()"
-            (click)="onWatchAdToDouble()"
+            (click)="onWatchAdForShuffle()"
           >
             <ion-icon slot="start" name="play-circle"></ion-icon>
-            {{ isWatchingAd() ? 'Loading Ad…' : 'Watch Ad to Double Reward' }}
+            {{ isWatchingAd() ? 'Loading Ad…' : 'Watch Ad for +1 Shuffle' }}
           </ion-button>
         } @else if (s.bonusClaimed) {
           <p class="claimed">Bonus reward claimed — awesome!</p>
         }
+        @if (adMessage()) { <p class="claimed" role="status">{{ adMessage() }}</p> }
 
         <div class="tomorrow-card">
           <ion-icon name="time-outline"></ion-icon>
@@ -110,6 +111,4 @@
     <p class="empty-state">Loading daily challenge…</p>
   }
   </div>
-
-  <app-ad-banner></app-ad-banner>
 </ion-content>

@@ -20,6 +20,7 @@ export class ArrowBlockComponent {
   @Input() isShaking = false;
   @Input() isHinted = false;
   @Input() isEscaping = false;
+  @Input() disabled = false;
   @Output() tap = new EventEmitter<string>();
 
   get icon(): string {
