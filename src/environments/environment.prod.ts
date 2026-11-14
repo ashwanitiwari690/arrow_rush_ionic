@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  appVersion: '1.0.2',
+  appVersion: '1.0.3',
 
   gameCode: 'ARROW_RUSH',
 
